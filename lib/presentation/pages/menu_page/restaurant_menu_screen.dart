@@ -33,6 +33,7 @@ class RestaurantMenuScreen extends StatefulWidget {
 class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   String selectedCategory = 'ALL';
   String selectedSubCategory = '';
+   bool isDrawerOpen = true;
   final List<MenuCategory> categories = [
     MenuCategory(name: 'ALL'),
     MenuCategory(
@@ -58,24 +59,32 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   ];
 
   @override
-  Widget build(BuildContext context) {
+   Widget build(BuildContext context) {
     return AppLayout(
       currentItem: NavbarItem.restaurant,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildMenuDrawer(),
-          Expanded(
-            child: _buildMainContent(),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth >= 1200;
+          final isTablet = constraints.maxWidth < 1200;
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isDrawerOpen)
+                _buildMenuDrawer(isTablet),
+              Expanded(
+                child: _buildMainContent(isDesktop, isTablet),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildMenuDrawer() {
+Widget _buildMenuDrawer(bool isTablet) {
     return Container(
-      width: 250,
+      width: isTablet ? 200 : 250,
       decoration: BoxDecoration(
         border: Border(
           right: BorderSide(color: Colors.grey.shade200),
@@ -83,22 +92,34 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       ),
       child: Column(
         children: [
+          if (isTablet)
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                icon: const Icon(Icons.menu_open),
+                onPressed: () {
+                  setState(() {
+                    isDrawerOpen = false;
+                  });
+                },
+              ),
+            ),
           Expanded(
             child: ListView.builder(
               itemCount: categories.length,
               itemBuilder: (context, index) {
                 final category = categories[index];
-                return _buildExpandableCategory(category);
+                return _buildExpandableCategory(category, isTablet);
               },
             ),
           ),
-          _buildNewCategoryButton(),
+          _buildNewCategoryButton(isTablet),
         ],
       ),
     );
   }
 
-  Widget _buildExpandableCategory(MenuCategory category) {
+ Widget _buildExpandableCategory(MenuCategory category, bool isTablet) {
     final bool hasSubCategories = category.subCategories.isNotEmpty;
     final bool isSelected = category.name == selectedCategory;
 
@@ -116,7 +137,10 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
           },
           child: Container(
             color: isSelected ? Colors.green.shade100 : Colors.transparent,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            padding: EdgeInsets.symmetric(
+              horizontal: isTablet ? 16 : 24,
+              vertical: isTablet ? 12 : 16,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -125,6 +149,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                     style: TextStyle(
                       color: isSelected ? Colors.green : Colors.grey[700],
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontSize: isTablet ? 13 : 14,
                     ),
                   ),
                 ),
@@ -132,6 +157,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   Icon(
                     category.isExpanded ? Icons.expand_less : Icons.expand_more,
                     color: Colors.grey[600],
+                    size: isTablet ? 20 : 24,
                   ),
               ],
             ),
@@ -148,9 +174,9 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
               },
               child: Container(
                 color: isSubSelected ? Colors.green.shade50 : Colors.transparent,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 48,
-                  vertical: 12,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isTablet ? 32 : 48,
+                  vertical: isTablet ? 8 : 12,
                 ),
                 child: Row(
                   children: [
@@ -158,7 +184,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                       subCategory,
                       style: TextStyle(
                         color: isSubSelected ? Colors.green : Colors.grey[600],
-                        fontSize: 14,
+                        fontSize: isTablet ? 12 : 14,
                       ),
                     ),
                   ],
@@ -170,17 +196,22 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     );
   }
 
-  Widget _buildNewCategoryButton() {
+  Widget _buildNewCategoryButton(bool isTablet) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(isTablet ? 12.0 : 16.0),
       child: ElevatedButton.icon(
         onPressed: _showAddCategoryDialog,
-        icon: const Icon(Icons.add),
-        label: const Text('NEW CATEGORY'),
+        icon: Icon(Icons.add, size: isTablet ? 18 : 24),
+        label: Text(
+          isTablet ? 'NEW' : 'NEW CATEGORY',
+          style: TextStyle(fontSize: isTablet ? 12 : 14),
+        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green.shade600,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: EdgeInsets.symmetric(
+            vertical: isTablet ? 12 : 16,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
@@ -189,147 +220,175 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     );
   }
 
-  Widget _buildMainContent() {
+Widget _buildMainContent(bool isDesktop, bool isTablet) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(isTablet ? 16.0 : 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
-          const SizedBox(height: 32),
+          _buildHeader(isDesktop, isTablet),
+          SizedBox(height: isTablet ? 24 : 32),
           Expanded(
-            child: _buildDishesGrid(),
+            child: _buildDishesGrid(isDesktop, isTablet),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            IconButton(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back),
-              tooltip: 'Back to Restaurants',
-            ),
-            const SizedBox(width: 16),
-            Text(
-              widget.restaurantName.toUpperCase(),
-              style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+ Widget _buildHeader(bool isDesktop, bool isTablet) {
+    return SizedBox(
+      width: double.infinity,
+      child: Row(
+       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!isDrawerOpen)
+                IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () {
+                    setState(() {
+                      isDrawerOpen = true;
+                    });
+                  },
+                ),
+              IconButton(
+                onPressed: () => context.pop(),
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Back to Restaurants',
               ),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            SizedBox(
-              width: 300,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search menu items...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+              const SizedBox(width: 16),
+              Text(
+                widget.restaurantName.toUpperCase(),
+                style: TextStyle(
+                  fontSize: isTablet ? 24 : 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+      
+      
+          ConstrainedBox(
+            constraints: BoxConstraints(
+                maxWidth: isTablet ? 400 : 500,
+              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: SizedBox(
+                    width: isTablet ? 200 : 300,
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search menu items...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 16 : 20,
+                          vertical: isTablet ? 12 : 16,
+                        ),
+                      ),
+                    ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // Handle adding new dish
+                  },
+                  icon: const Icon(Icons.add),
+                  label: Text(
+                    isTablet ? 'ADD' : 'ADD DISH',
+                    style: TextStyle(fontSize: isTablet ? 13 : 14),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade600,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isTablet ? 16 : 24,
+                      vertical: isTablet ? 12 : 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(width: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                // Handle adding new dish
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('ADD DISH'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade600,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildDishesGrid() {
-  return GridView.builder(
-    gridDelegate:  const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 3,
-      childAspectRatio: 1.5,
-      crossAxisSpacing: 24,
-      mainAxisSpacing: 24,
-    ),
-    itemCount: 9,
-    itemBuilder: (context, index) => DishCard(
-      onTap: _showDishDetails,
-      onEdit: () async {
-        final result = await showDialog<Map<String, dynamic>>(
-          context: context,
-          builder: (context) => const DishEditDialog(
-            initialData: {
-              'name': 'SMOKED BRISKET',
-              'price': 12.95,
-              'calories': '360',
-              'protein': '32',
-              'carbs': '23',
-              'fat': '50',
+  Widget _buildDishesGrid(bool isDesktop, bool isTablet) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        int crossAxisCount;
+        double childAspectRatio = 1.5;
+        double spacing;
+
+        if (isDesktop) {
+          if (constraints.maxWidth >= 1800) {
+            crossAxisCount = 4;
+            spacing = 32;
+          } else if (constraints.maxWidth >= 1400) {
+            crossAxisCount = 3;
+            spacing = 28;
+          } else {
+            crossAxisCount = 2;
+            spacing = 24;
+          }
+        } else {
+          if (constraints.maxWidth >= 1000) {
+            crossAxisCount = 2;
+            spacing = 20;
+          } else {
+            crossAxisCount = 1;
+            spacing = 16;
+          }
+        }
+
+        return GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: childAspectRatio,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+          ),
+          itemCount: 9,
+          itemBuilder: (context, index) => DishCard(
+            onTap: _showDishDetails,
+            onEdit: () async {
+              final result = await showDialog<Map<String, dynamic>>(
+                context: context,
+                builder: (context) => const DishEditDialog(
+                  initialData: {
+                    'name': 'SMOKED BRISKET',
+                    'price': 12.95,
+                    'calories': '360',
+                    'protein': '32',
+                    'carbs': '23',
+                    'fat': '50',
+                  },
+                ),
+              );
+              
+              if (result != null) {
+                // Handle the updated dish data
+                print(result);
+              }
             },
           ),
         );
-        
-        if (result != null) {
-          // Handle the updated dish data
-          print(result);
-        }
       },
-    ),
-  );
-}
-
-
-
-  // Widget _buildNutritionInfo(String label, String value) {
-  //   return Padding(
-  //     padding: const EdgeInsets.only(bottom: 4),
-  //     child: Row(
-  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //       children: [
-  //         Text(
-  //           label,
-  //           style: TextStyle(
-  //             fontSize: 12,
-  //             color: Colors.grey[600],
-  //           ),
-  //         ),
-  //         Text(
-  //           value,
-  //           style: const TextStyle(
-  //             fontSize: 12,
-  //             fontWeight: FontWeight.bold,
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
+    );
+  }
 
   void _showAddCategoryDialog() {
     showDialog(

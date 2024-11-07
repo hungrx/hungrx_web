@@ -1,14 +1,14 @@
-// File: lib/routes/app_router.dart
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_web/presentation/pages/common_food_page/common_food_screen.dart';
 import 'package:hungrx_web/presentation/pages/dashboard_page/dashboard_screen.dart';
 import 'package:hungrx_web/presentation/pages/grocery_page/grocery_screen.dart';
-import 'package:hungrx_web/presentation/pages/login_page/login_screen.dart';
 import 'package:hungrx_web/presentation/pages/menu_page/restaurant_menu_screen.dart';
 import 'package:hungrx_web/presentation/pages/otp_verifiacation/otp_verification_screen.dart';
 import 'package:hungrx_web/presentation/pages/restaurant_page/restaurant_screen.dart';
+import 'package:hungrx_web/presentation/pages/restaurant_page/widget/search_results_page.dart';
+import 'package:hungrx_web/presentation/pages/search_screen.dart/search_results_screen.dart';
+import 'package:hungrx_web/presentation/pages/search_screen.dart/search_screen.dart';
 import 'route_names.dart';
 
 // Import other pages as needed
@@ -54,6 +54,14 @@ class AppRouter {
               restaurantName: state.pathParameters['name'] ?? '',
             ),
           ),
+          GoRoute(
+      path: '/search',
+      name: 'search',
+      builder: (context, state) {
+        final query = state.uri.queryParameters['q'] ?? '';
+        return SearchResultsPage(searchQuery: query);
+      },
+    ),
           GoRoute(
             path: '/restaurant',
             name: 'restaurant',

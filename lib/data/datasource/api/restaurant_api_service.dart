@@ -7,7 +7,7 @@ class RestaurantApiService {
   Future<List<Map<String, dynamic>>> getRestaurants() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/files/getRestaurant'));
-      
+    
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         return List<Map<String, dynamic>>.from(data['restaurantNameAndLogo']);
