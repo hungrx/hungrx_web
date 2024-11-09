@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_web/core/widgets/custom_header.dart';
 import 'package:hungrx_web/core/widgets/custom_navbar.dart';
 import 'package:hungrx_web/data/models/category_model.dart';
+import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_event.dart';
 import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_state.dart';
@@ -20,19 +21,11 @@ class RestaurantScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-     final selectedCategory = useState<CategoryModel?>(null);
-    // final categories = useState<List<String>>([
-    //   'ALL',
-    //   'CASUAL DINING',
-    //   'FINE DINING',
-    //   'FAST FOOD',
-    //   'BUFFET',
-    //   'CAFÉS'
-    // ]);
+    final selectedCategory = useState<CategoryModel?>(null);
 
     useEffect(() {
       context.read<RestaurantBloc>().add(FetchRestaurants());
-       context.read<CategoryBloc>().add(FetchCategories());
+      context.read<CategoryBloc>().add(FetchCategories());
       return null;
     }, []);
 
@@ -73,10 +66,13 @@ class RestaurantScreen extends HookWidget {
                   width: isTablet ? 200 : 250,
                 ),
                 Expanded(
-                  child: _buildMainContent(
-                    context,
-                    isDesktop: isDesktop,
-                    isTablet: isTablet,
+                  child: BlocBuilder<CategoryBloc, CategoryState>(
+                    builder: (context, state) => _buildMainContent(
+                      context,
+                      state: state,
+                      isDesktop: isDesktop,
+                      isTablet: isTablet,
+                    ),
                   ),
                 ),
               ],
@@ -126,7 +122,7 @@ class RestaurantScreen extends HookWidget {
 
           if (state is CategoryLoaded) {
             final categories = state.categories;
-            
+
             return Column(
               children: [
                 Expanded(
@@ -149,8 +145,7 @@ class RestaurantScreen extends HookWidget {
     );
   }
 
-
- Widget _buildCategoryItem(
+  Widget _buildCategoryItem(
     CategoryModel category,
     ValueNotifier<CategoryModel?> selectedCategory,
   ) {
@@ -172,38 +167,37 @@ class RestaurantScreen extends HookWidget {
     );
   }
 
-
-// In RestaurantScreen
-Widget _buildNewCategoryButton(BuildContext context) {
-  return Padding(
-    padding: const EdgeInsets.all(12.0),
-    child: ElevatedButton.icon(
-      onPressed: () {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => const AddCategoryDialog(),
-        );
-      },
-      icon: const Icon(Icons.add, size: 18),
-      label: const Text(
-        'NEW CATEGORY',
-        style: TextStyle(fontSize: 13),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green.shade600,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+  Widget _buildNewCategoryButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => const AddCategoryDialog(),
+          );
+        },
+        icon: const Icon(Icons.add, size: 18),
+        label: const Text(
+          'NEW CATEGORY',
+          style: TextStyle(fontSize: 13),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green.shade600,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildMainContent(
     BuildContext context, {
+    required CategoryState state,
     required bool isDesktop,
     required bool isTablet,
   }) {
@@ -215,23 +209,30 @@ Widget _buildNewCategoryButton(BuildContext context) {
           CustomHeader(
             title: 'ALL RESTAURANT',
             searchHint: 'Search restaurant...',
-            buttonLabel: 'ADD RESTARANT',
+            buttonLabel: 'ADD RESTAURANT',
             isTablet: isTablet,
             onAddPressed: () {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => const AddRestaurantDialog(
-                  categories: [
-                    'ALL',
-                    'CASUAL DINING',
-                    'FINE DINING',
-                    'FAST FOOD',
-                    'BUFFET',
-                    'CAFÉS'
-                  ],
-                ),
-              );
+              if (state is CategoryLoaded && state.categories.isNotEmpty) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<AddRestaurantBloc>(),
+                    child: AddRestaurantDialog(
+                      categories: state.categories,
+                    ),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Please add at least one category before adding a restaurant',
+                    ),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
             },
             onSearchChanged: (value) {
               // Handle search
@@ -239,13 +240,18 @@ Widget _buildNewCategoryButton(BuildContext context) {
           ),
           const SizedBox(height: 24),
           Expanded(
-            child: _buildRestaurantGrid(isDesktop, isTablet),
+            child: _buildRestaurantGrid(isDesktop, isTablet, state),
           ),
         ],
       ),
     );
   }
-  Widget _buildRestaurantGrid(bool isDesktop, bool isTablet) {
+
+  Widget _buildRestaurantGrid(
+    bool isDesktop,
+    bool isTablet,
+    CategoryState states,
+  ) {
     return BlocBuilder<RestaurantBloc, RestaurantState>(
       builder: (context, state) {
         if (state is RestaurantLoading) {
@@ -305,5 +311,4 @@ Widget _buildNewCategoryButton(BuildContext context) {
       },
     );
   }
-  }
-
+}

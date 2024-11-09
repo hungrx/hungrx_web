@@ -1,36 +1,42 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_web/data/models/add_restaurant_model.dart';
 import 'package:hungrx_web/data/models/category_model.dart';
-import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_bloc.dart';
-import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_event.dart';
-import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_state.dart';
-import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_bloc.dart';
-import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_event.dart';
+import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_state.dart';
 import 'package:image_picker_web/image_picker_web.dart';
 
-class AddRestaurantDialog extends StatefulWidget {
-  final List<CategoryModel> categories;
-
-  const AddRestaurantDialog({
+class EditRestaurantDialog extends StatefulWidget {
+  const EditRestaurantDialog({
     super.key,
-    required this.categories,
   });
 
   @override
-  State<AddRestaurantDialog> createState() => _AddRestaurantDialogState();
+  State<EditRestaurantDialog> createState() => _EditRestaurantDialogState();
 }
 
-class _AddRestaurantDialogState extends State<AddRestaurantDialog> {
+class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _ratingController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _ratingController;
+  late TextEditingController _descriptionController;
   String? _selectedCategoryId;
   Uint8List? _imageBytes;
   String? _imageName;
+  String? _existingImageUrl;
   bool _isLoading = false;
+  bool _imageChanged = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers with existing data
+    _nameController = TextEditingController(text: "");
+    _ratingController = TextEditingController(text: "");
+    _descriptionController = TextEditingController(text: "");
+    // _selectedCategoryId = widget.restaurant.id;
+    // _existingImageUrl = widget.restaurant.logo;
+  }
 
   @override
   void dispose() {
@@ -40,29 +46,29 @@ class _AddRestaurantDialogState extends State<AddRestaurantDialog> {
     super.dispose();
   }
 
-Future<void> _pickImage() async {
-  try {
-    final MediaInfo? files = await ImagePickerWeb.getImageInfo(); // Call the function with parentheses
-    if (files != null && files.data != null) {
-      setState(() {
-        _imageBytes = files.data!;
-        _imageName = files.fileName ?? 'restaurant_image.jpg';
-      });
+  Future<void> _pickImage() async {
+    try {
+      final MediaInfo? files = await ImagePickerWeb.getImageInfo();
+      if (files != null && files.data != null) {
+        setState(() {
+          _imageBytes = files.data!;
+          _imageName = files.fileName ?? 'restaurant_image.jpg';
+          _imageChanged = true;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error picking image. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Error picking image. Please try again.'),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
-}
-
 
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
-      if (_imageBytes == null) {
+      if (_existingImageUrl == null && _imageBytes == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Please select a restaurant image'),
@@ -72,42 +78,7 @@ Future<void> _pickImage() async {
         return;
       }
 
-      if (_selectedCategoryId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a category'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
       setState(() => _isLoading = true);
-
-      try {
-        // Create restaurant data using the model
-        final restaurant = AddRestaurantModel(
-          name: _nameController.text,
-          categoryId: _selectedCategoryId!,
-          rating: double.parse(_ratingController.text),
-          description: _descriptionController.text,
-          logoBytes: _imageBytes,
-          logoName: _imageName,
-        );
-
-        // Dispatch event to AddRestaurantBloc
-        context.read<AddRestaurantBloc>().add(
-          AddRestaurantSubmitted(restaurant: restaurant),
-        );
-      } catch (e) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error adding restaurant: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
     }
   }
 
@@ -117,29 +88,8 @@ Future<void> _pickImage() async {
     final dialogWidth = screenSize.width * 0.8;
     final dialogHeight = screenSize.height * 0.8;
 
-    return BlocListener<AddRestaurantBloc, AddRestaurantState>(
-      listener: (context, state) {
-        if (state is AddRestaurantSuccess) {
-          setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Restaurant added successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          // Refresh the restaurant list
-          context.read<RestaurantBloc>().add(FetchRestaurants());
-          Navigator.of(context).pop();
-        } else if (state is AddRestaurantError) {
-          setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
+    return BlocListener<EditRestaurantBloc, EditRestaurantState>(
+      listener: (context, state) {},
       child: Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -180,7 +130,7 @@ Future<void> _pickImage() async {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         const Text(
-          'RESTAURANT DETAILS',
+          'EDIT RESTAURANT',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -200,28 +150,37 @@ Future<void> _pickImage() async {
         color: Colors.grey[200],
         borderRadius: BorderRadius.circular(12),
       ),
-      child: _imageBytes != null
+      child: _imageBytes != null || _existingImageUrl != null
           ? Stack(
               fit: StackFit.expand,
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.memory(
-                    _imageBytes!,
-                    fit: BoxFit.cover,
-                  ),
+                  child: _imageBytes != null
+                      ? Image.memory(
+                          _imageBytes!,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.network(
+                          _existingImageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: Colors.grey[600],
+                              ),
+                            );
+                          },
+                        ),
                 ),
                 Positioned(
                   top: 8,
                   right: 8,
                   child: IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: _isLoading
-                        ? null
-                        : () => setState(() {
-                              _imageBytes = null;
-                              _imageName = null;
-                            }),
+                    icon: const Icon(Icons.edit),
+                    onPressed: _isLoading ? null : _pickImage,
                     color: Colors.white,
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.black54,
@@ -260,6 +219,7 @@ Future<void> _pickImage() async {
   }
 
   Widget _buildFormSection() {
+    List<CategoryModel> categories = [];
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -285,24 +245,26 @@ Future<void> _pickImage() async {
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _selectedCategoryId,
-              isExpanded: !_isLoading,
+              isExpanded: true,
               decoration: InputDecoration(
                 labelText: 'CATEGORY',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              items: widget.categories.map((category) {
+              items: categories.map((category) {
                 return DropdownMenuItem(
                   value: category.id,
                   child: Text(category.name),
                 );
               }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedCategoryId = value;
-                });
-              },
+              onChanged: _isLoading
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _selectedCategoryId = value;
+                      });
+                    },
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please select a category';
@@ -370,11 +332,12 @@ Future<void> _pickImage() async {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : const Text(
-                        'SAVE',
+                        'UPDATE',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

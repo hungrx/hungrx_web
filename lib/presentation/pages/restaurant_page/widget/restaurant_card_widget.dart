@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_bloc.dart';
+import 'package:hungrx_web/presentation/pages/restaurant_page/widget/edit_restuarant_widget.dart';
+import 'package:hungrx_web/presentation/pages/restaurant_page/widget/restuarant_image_widget.dart';
 
 // Separate HookWidget for the restaurant card
 class RestaurantCard extends HookWidget {
@@ -12,16 +16,32 @@ class RestaurantCard extends HookWidget {
     required this.name,
     required this.logo,
   });
+
+  String _sanitizeImageUrl(String url) {
+    // Handle various image URL formats and ensure HTTPS
+    if (url.startsWith('http://')) {
+      url = 'https://' + url.substring(7);
+    }
+
+    // Handle DigitalOcean Spaces URLs
+    if (url.contains('digitaloceanspaces.com')) {
+      // Ensure proper URL encoding
+      return Uri.encodeFull(url);
+    }
+
+    return url;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isHovered = useState(false);
-
+    final sanitizedImageUrl = _sanitizeImageUrl(logo);
     return MouseRegion(
       onEnter: (_) => isHovered.value = true,
       onExit: (_) => isHovered.value = false,
       child: GestureDetector(
         onTap: () {
-          context.push('/restaurant-menu/BURGER KING');
+          context.push('/restaurant-menu/$name');
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -58,22 +78,10 @@ class RestaurantCard extends HookWidget {
                           ).createShader(bounds);
                         },
                         blendMode: BlendMode.darken,
-                        child: Image.network(
-                          logo,
+                        child: RestaurantImageWidget(
+                          imageUrl: sanitizedImageUrl,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey.shade200,
-                              child: const Center(
-                                child: Icon(
-                                  Icons.restaurant,
-                                  size: 50,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            );
-                          },
                         ),
                       ),
                       AnimatedPositioned(
@@ -101,6 +109,15 @@ class RestaurantCard extends HookWidget {
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(20),
                                 onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (_) => BlocProvider.value(
+                                      value: context.read<EditRestaurantBloc>(),
+                                      child: const EditRestaurantDialog(),
+                                    ),
+                                  );
+
                                   // Handle edit action
                                 },
                                 child: const Padding(
@@ -136,7 +153,7 @@ class RestaurantCard extends HookWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                           Text(
+                          Text(
                             name,
                             style: const TextStyle(
                               fontSize: 18,

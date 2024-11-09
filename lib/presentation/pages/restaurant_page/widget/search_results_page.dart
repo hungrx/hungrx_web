@@ -12,11 +12,13 @@ import 'package:hungrx_web/presentation/layout/app_layout.dart';
 import 'package:hungrx_web/presentation/pages/restaurant_page/widget/restaurant_card_widget.dart';
 
 class SearchResultsPage extends StatelessWidget {
+
   final String searchQuery;
 
   const SearchResultsPage({
     super.key,
     required this.searchQuery,
+   
   });
 
   @override
@@ -29,13 +31,16 @@ class SearchResultsPage extends StatelessWidget {
           ),
         ),
       )..add(SearchRestaurantSubmitted(searchQuery)),
-      child: const SearchResultsView(),
+      child:  const SearchResultsView(
+        
+      ),
     );
   }
 }
 
 class SearchResultsView extends StatelessWidget {
-  const SearchResultsView({super.key});
+
+  const SearchResultsView({super.key,});
 
   @override
   Widget build(BuildContext context) {
@@ -140,10 +145,11 @@ class SearchResultsView extends StatelessWidget {
         ),
         itemCount: state.restaurants.length,
         itemBuilder: (context, index) {
-          final restaurant = state.restaurants[index];
+          final restaurants = state.restaurants[index];
           return RestaurantCard(
-            name: restaurant.name,
-            logo: restaurant.logo,
+          
+            name: restaurants.name,
+            logo: restaurants.logo,
           );
         },
       );
@@ -151,4 +157,4 @@ class SearchResultsView extends StatelessWidget {
 
     return const SizedBox.shrink();
   }
-} 
+}

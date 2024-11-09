@@ -7,11 +7,7 @@ import 'package:hungrx_web/presentation/pages/menu_page/restaurant_menu_screen.d
 import 'package:hungrx_web/presentation/pages/otp_verifiacation/otp_verification_screen.dart';
 import 'package:hungrx_web/presentation/pages/restaurant_page/restaurant_screen.dart';
 import 'package:hungrx_web/presentation/pages/restaurant_page/widget/search_results_page.dart';
-import 'package:hungrx_web/presentation/pages/search_screen.dart/search_results_screen.dart';
-import 'package:hungrx_web/presentation/pages/search_screen.dart/search_screen.dart';
 import 'route_names.dart';
-
-// Import other pages as needed
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -23,8 +19,9 @@ class AppRouter {
         name: 'login',
         builder: (context, state) => const DashboardScreen(),
       ),
-  GoRoute(
-        path: '/otp-verification/:phoneNumber/:name',  // Updated path with both parameters
+      GoRoute(
+        path:
+            '/otp-verification/:phoneNumber/:name',
         name: 'otpVerify',
         builder: (context, state) {
           final phoneNumber = state.pathParameters['phoneNumber'] ?? '';
@@ -55,13 +52,13 @@ class AppRouter {
             ),
           ),
           GoRoute(
-      path: '/search',
-      name: 'search',
-      builder: (context, state) {
-        final query = state.uri.queryParameters['q'] ?? '';
-        return SearchResultsPage(searchQuery: query);
-      },
-    ),
+            path: '/search',
+            name: 'search',
+            builder: (context, state) {
+              final query = state.uri.queryParameters['q'] ?? '';
+              return SearchResultsPage(searchQuery: query);
+            },
+          ),
           GoRoute(
             path: '/restaurant',
             name: 'restaurant',

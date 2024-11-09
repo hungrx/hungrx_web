@@ -1,4 +1,3 @@
-// In your main.dart file
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_web/data/datasource/api/add_category_remote_data_source.dart';
@@ -8,6 +7,8 @@ import 'package:hungrx_web/data/repositories/category_repository_impl.dart';
 import 'package:hungrx_web/data/repositories/restaurant_repository.dart';
 import 'package:hungrx_web/domain/usecase/get_categories_usecase.dart';
 import 'package:hungrx_web/domain/usecase/get_restaurants_usecase.dart';
+import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/login_page/login_page_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/otp_verification/otp_verification_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_bloc.dart';
@@ -42,7 +43,12 @@ class MyApp extends StatelessWidget {
             getRestaurantsUseCase: getRestaurantsUseCase,
           ),
         ),
-          BlocProvider<CategoryBloc>(
+        BlocProvider<EditRestaurantBloc>(
+          create: (context) => EditRestaurantBloc(),
+        ),
+
+        BlocProvider(create: (context) => AddRestaurantBloc()),
+        BlocProvider<CategoryBloc>(
           create: (context) => CategoryBloc(
             getCategoriesUseCase: GetCategoriesUseCase(
               CategoryRepositoryImpl(
@@ -54,14 +60,14 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider<AddCategoryBloc>(
-      create: (context) => AddCategoryBloc(
-        repository: AddCategoryRepository(
-          dataSource: AddCategoryDataSource(
-            client: http.Client(),
+          create: (context) => AddCategoryBloc(
+            repository: AddCategoryRepository(
+              dataSource: AddCategoryDataSource(
+                client: http.Client(),
+              ),
+            ),
           ),
         ),
-      ),
-    ),
 
         // Add more BlocProviders here
       ],
