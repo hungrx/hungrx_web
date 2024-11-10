@@ -42,26 +42,4 @@ class RestaurantBloc extends Bloc<RestaurantEvent, RestaurantState> {
       emit(RestaurantLoaded(filteredRestaurants));
     }
   }
-
-  // Future<void> _onDeleteRestaurant(
-  //   DeleteRestaurant event,
-  //   Emitter<RestaurantState> emit,
-  // ) async {
-  //   if (state is RestaurantLoaded) {
-  //     final currentRestaurants = (state as RestaurantLoaded).restaurants;
-  //     emit(RestaurantLoading());
-      
-  //     final result = await deleteRestaurantUseCase.execute(event.id);
-      
-  //     result.fold(
-  //       (failure) => emit(RestaurantError(failure.message)),
-  //       (_) {
-  //         final updatedRestaurants = currentRestaurants
-  //             .where((restaurant) => restaurant.id != event.id)
-  //             .toList();
-  //         emit(RestaurantLoaded(updatedRestaurants));
-  //       },
-  //     );
-  //   }
-  // }
 }

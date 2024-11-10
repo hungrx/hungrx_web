@@ -2,25 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hungrx_web/data/models/category_model.dart';
 import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_bloc.dart';
 import 'package:hungrx_web/presentation/pages/restaurant_page/widget/edit_restuarant_widget.dart';
 import 'package:hungrx_web/presentation/pages/restaurant_page/widget/restuarant_image_widget.dart';
 
 // Separate HookWidget for the restaurant card
 class RestaurantCard extends HookWidget {
+  final List<CategoryModel> categories;
   final String name;
   final String logo;
+  final String descrioption;
+  final String rating;
+  final String id;
+  final String category;
+  final String updatedAt;
+  final String createdAt;
 
-  const RestaurantCard({
+  const RestaurantCard( {
     super.key,
+    required this.categories,
+    required this.descrioption,
+    required this.rating,
+    required this.id,
+    required this.category,
+    required this.updatedAt,
+    required this.createdAt,
     required this.name,
     required this.logo,
   });
 
   String _sanitizeImageUrl(String url) {
-    // Handle various image URL formats and ensure HTTPS
     if (url.startsWith('http://')) {
-      url = 'https://' + url.substring(7);
+      url = 'https://${url.substring(7)}';
     }
 
     // Handle DigitalOcean Spaces URLs
@@ -79,8 +93,9 @@ class RestaurantCard extends HookWidget {
                         },
                         blendMode: BlendMode.darken,
                         child: RestaurantImageWidget(
+                          height: MediaQuery.of(context).size.width * .2,
                           imageUrl: sanitizedImageUrl,
-                          width: double.infinity,
+                          width: MediaQuery.of(context).size.width * .25,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -114,7 +129,18 @@ class RestaurantCard extends HookWidget {
                                     barrierDismissible: false,
                                     builder: (_) => BlocProvider.value(
                                       value: context.read<EditRestaurantBloc>(),
-                                      child: const EditRestaurantDialog(),
+                                      child: EditRestaurantDialog(
+                                        categories: categories,
+                                        updatedAt: updatedAt,
+                                        category: category,
+                                        createdAt: createdAt,
+                                        descrioption: descrioption,
+                                        id: id,
+                                        rating: rating,
+                                        name: name,
+                                        logo: logo,
+                                        // add the value to pass
+                                      ),
                                     ),
                                   );
 
@@ -191,7 +217,7 @@ class RestaurantCard extends HookWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'LAST UPDATE: 12/20/2024 12:32 AM',
+                            'LAST UPDATE: $updatedAt',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],

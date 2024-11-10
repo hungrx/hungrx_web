@@ -31,9 +31,6 @@ class AddRestaurantApiClient {
       final response = await request.send();
       
       final responseData = await response.stream.bytesToString();
-print(response.request);
-print(responseData);
-print(response.statusCode);
       if (response.statusCode == 201 || response.statusCode == 200) {
         return json.decode(responseData);
       } else {

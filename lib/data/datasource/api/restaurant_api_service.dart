@@ -21,7 +21,7 @@ class RestaurantApiService {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        final restaurants = List<Map<String, dynamic>>.from(data['restaurantNameAndLogo']);
+        final restaurants = List<Map<String, dynamic>>.from(data['restaurants']);
         
         return restaurants.map((restaurant) {
           var logo = restaurant['logo'] as String;

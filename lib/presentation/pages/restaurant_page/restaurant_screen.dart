@@ -240,7 +240,7 @@ class RestaurantScreen extends HookWidget {
           ),
           const SizedBox(height: 24),
           Expanded(
-            child: _buildRestaurantGrid(isDesktop, isTablet, state),
+            child: _buildRestaurantGrid(isDesktop, isTablet),
           ),
         ],
       ),
@@ -248,17 +248,29 @@ class RestaurantScreen extends HookWidget {
   }
 
   Widget _buildRestaurantGrid(
-    bool isDesktop,
-    bool isTablet,
-    CategoryState states,
-  ) {
-    return BlocBuilder<RestaurantBloc, RestaurantState>(
-      builder: (context, state) {
-        if (state is RestaurantLoading) {
+  bool isDesktop,
+  bool isTablet,
+) {
+  return MultiBlocListener(
+    listeners: [
+      BlocListener<RestaurantBloc, RestaurantState>(
+        listener: (context, state) {
+          // Handle RestaurantBloc-specific actions here if needed
+        },
+      ),
+      BlocListener<CategoryBloc, CategoryState>(
+        listener: (context, state) {
+          // Handle CategoryBloc-specific actions here if needed
+        },
+      ),
+    ],
+    child: BlocBuilder<RestaurantBloc, RestaurantState>(
+      builder: (context, restaurantState) {
+        if (restaurantState is RestaurantLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (state is RestaurantError) {
+        if (restaurantState is RestaurantError) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -277,29 +289,52 @@ class RestaurantScreen extends HookWidget {
           );
         }
 
-        if (state is RestaurantLoaded) {
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              int crossAxisCount;
-              if (isDesktop) {
-                crossAxisCount = constraints.maxWidth > 1500 ? 4 : 3;
-              } else {
-                crossAxisCount = constraints.maxWidth > 800 ? 2 : 1;
+        if (restaurantState is RestaurantLoaded) {
+          return BlocBuilder<CategoryBloc, CategoryState>(
+            builder: (context, categoryState) {
+              List<CategoryModel> categories = []; // Default empty categories
+
+              if (categoryState is CategoryLoaded) {
+                categories = categoryState.categories;
               }
 
-              return GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  childAspectRatio: isTablet ? 1.3 : 1.5,
-                  crossAxisSpacing: isTablet ? 16 : 24,
-                  mainAxisSpacing: isTablet ? 16 : 24,
-                ),
-                itemCount: state.restaurants.length,
-                itemBuilder: (context, index) {
-                  final restaurant = state.restaurants[index];
-                  return RestaurantCard(
-                    name: restaurant.name,
-                    logo: restaurant.logo,
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  int crossAxisCount;
+                  if (isDesktop) {
+                    crossAxisCount = constraints.maxWidth > 1500 ? 4 : 3;
+                  } else {
+                    crossAxisCount = constraints.maxWidth > 800 ? 2 : 1;
+                  }
+
+                  return GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: isTablet ? 1.3 : 1.5,
+                      crossAxisSpacing: isTablet ? 16 : 24,
+                      mainAxisSpacing: isTablet ? 16 : 24,
+                    ),
+                    itemCount: restaurantState.restaurants.length,
+                    itemBuilder: (context, index) {
+                      final restaurant = restaurantState.restaurants[index];
+
+              //         final restaurantCategory = categories.firstWhere(
+              //   (cat) => cat.id == restaurant.categoryId,  // Assuming your restaurant model has categoryId
+              //   orElse: () => categories.first, // Fallback to first category if not found
+              // );
+
+                      return RestaurantCard(
+                        categories: categories,
+                        updatedAt: restaurant.updatedAt ?? "",
+                        category: restaurant.category ?? "",
+                        createdAt: restaurant.createdAt ?? "",
+                        descrioption: restaurant.description ?? "",
+                        id: restaurant.id,
+                        rating: restaurant.rating.toString(),
+                        name: restaurant.name,
+                        logo: restaurant.logo,
+                      );
+                    },
                   );
                 },
               );
@@ -309,6 +344,8 @@ class RestaurantScreen extends HookWidget {
 
         return const Center(child: Text('No restaurants found'));
       },
-    );
-  }
+    ),
+  );
+}
+
 }

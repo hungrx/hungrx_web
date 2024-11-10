@@ -2,13 +2,34 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_web/data/models/category_model.dart';
+import 'package:hungrx_web/data/models/edit_restaurant_model.dart';
 import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_event.dart';
 import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_state.dart';
+import 'package:hungrx_web/presentation/pages/restaurant_page/widget/restuarant_image_widget.dart';
 import 'package:image_picker_web/image_picker_web.dart';
 
 class EditRestaurantDialog extends StatefulWidget {
+  final List<CategoryModel> categories;
+  final String name;
+  final String logo;
+  final String descrioption;
+  final String rating;
+  final String id;
+  final String category;
+  final String updatedAt;
+  final String createdAt;
   const EditRestaurantDialog({
     super.key,
+    required this.name,
+    required this.logo,
+    required this.descrioption,
+    required this.rating,
+    required this.id,
+    required this.category,
+    required this.updatedAt,
+    required this.createdAt,
+    required this.categories,
   });
 
   @override
@@ -30,12 +51,17 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with existing data
-    _nameController = TextEditingController(text: "");
-    _ratingController = TextEditingController(text: "");
-    _descriptionController = TextEditingController(text: "");
-    // _selectedCategoryId = widget.restaurant.id;
-    // _existingImageUrl = widget.restaurant.logo;
+    _nameController = TextEditingController(text: widget.name);
+    _ratingController = TextEditingController(text: widget.rating);
+    _descriptionController = TextEditingController(text: widget.descrioption);
+    _existingImageUrl = widget.logo;
+    _selectedCategoryId =
+        widget.category;
+
+    if (_selectedCategoryId != null &&
+        !widget.categories.any((cat) => cat.id == _selectedCategoryId)) {
+      _selectedCategoryId = null; 
+    }
   }
 
   @override
@@ -79,6 +105,34 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
       }
 
       setState(() => _isLoading = true);
+
+      try {
+        final restaurant = EditRestaurantModel(
+          id: widget.id,
+          name: _nameController.text,
+          categoryId: _selectedCategoryId ?? '',
+          rating: double.parse(_ratingController.text),
+          description: _descriptionController.text,
+          logoUrl: _existingImageUrl,
+          logoBytes: _imageChanged ? _imageBytes : null,
+          logoName: _imageChanged ? _imageName : null,
+        );
+
+        context.read<EditRestaurantBloc>().add(
+              EditRestaurantSubmitEvent(
+                restaurantId: widget.id,
+                restaurant: restaurant,
+              ),
+            );
+      } catch (e) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -89,7 +143,25 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
     final dialogHeight = screenSize.height * 0.8;
 
     return BlocListener<EditRestaurantBloc, EditRestaurantState>(
-      listener: (context, state) {},
+      listener: (context, state) {
+        if (state is EditRestaurantSuccessState) {
+          Navigator.of(context).pop(true); // Return true to indicate success
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Restaurant updated successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else if (state is EditRestaurantErrorState) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
       child: Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -161,18 +233,11 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
                           _imageBytes!,
                           fit: BoxFit.cover,
                         )
-                      : Image.network(
-                          _existingImageUrl!,
+                      : RestaurantImageWidget(
+                          height: MediaQuery.of(context).size.width * .2,
+                          imageUrl: _existingImageUrl!,
+                          width: MediaQuery.of(context).size.width * .25,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Icon(
-                                Icons.error_outline,
-                                size: 48,
-                                color: Colors.grey[600],
-                              ),
-                            );
-                          },
                         ),
                 ),
                 Positioned(
@@ -219,7 +284,15 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
   }
 
   Widget _buildFormSection() {
-    List<CategoryModel> categories = [];
+    // Create dropdown items from widget.categories
+    List<DropdownMenuItem<String>> categoryItems =
+        widget.categories.map((category) {
+      return DropdownMenuItem<String>(
+        value: category.id,
+        child: Text(category.name),
+      );
+    }).toList();
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -252,12 +325,7 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              items: categories.map((category) {
-                return DropdownMenuItem(
-                  value: category.id,
-                  child: Text(category.name),
-                );
-              }).toList(),
+              items: categoryItems,
               onChanged: _isLoading
                   ? null
                   : (value) {
@@ -277,7 +345,7 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
               controller: _ratingController,
               enabled: !_isLoading,
               decoration: InputDecoration(
-                labelText: 'RATING (4.5 - 5)',
+                labelText: 'RATING (1 - 5)',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -288,8 +356,8 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
                   return 'Please enter rating';
                 }
                 final rating = double.tryParse(value);
-                if (rating == null || rating < 4.5 || rating > 5) {
-                  return 'Rating must be between 4.5 and 5';
+                if (rating == null || rating < 1 || rating > 5) {
+                  return 'Rating must be between 1 and 5';
                 }
                 return null;
               },

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_network/image_network.dart';
 
 class RestaurantImageWidget extends StatelessWidget {
   final String imageUrl;
@@ -17,12 +17,20 @@ class RestaurantImageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
-      width: width,
-      height: height,
-      fit: fit,
-      placeholder: (context, url) => Container(
+    return ImageNetwork(
+    
+      image: imageUrl,
+      width: width??100,
+      height: height??100,
+      duration: 1000,
+      curve: Curves.easeIn,
+      onPointer: true,
+      debugPrint: false,
+      fullScreen: false,
+      // fitAndroidIos: fit,
+      fitWeb: BoxFitWeb.cover,
+      borderRadius: BorderRadius.zero,
+      onLoading: Container(
         color: Colors.grey[200],
         child: const Center(
           child: CircularProgressIndicator(
@@ -30,29 +38,29 @@ class RestaurantImageWidget extends StatelessWidget {
           ),
         ),
       ),
-      errorWidget: (context, url, error) {
-        print('Image Error: $error for URL: $url'); // For debugging
-        return Container(
-          color: Colors.grey[200],
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.restaurant,
-                size: 50,
-                color: Colors.grey[400],
+      onError: Container(
+        color: Colors.grey[200],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.restaurant,
+              size: 50,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Image not available',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Image not available',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        );
+            ),
+          ],
+        ),
+      ),
+      onTap: () {
+        debugPrint("Image tapped");
       },
     );
   }

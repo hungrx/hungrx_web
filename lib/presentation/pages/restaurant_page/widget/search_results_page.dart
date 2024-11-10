@@ -146,11 +146,12 @@ class SearchResultsView extends StatelessWidget {
         itemCount: state.restaurants.length,
         itemBuilder: (context, index) {
           final restaurants = state.restaurants[index];
-          return RestaurantCard(
+          return SizedBox();
+          // RestaurantCard(
           
-            name: restaurants.name,
-            logo: restaurants.logo,
-          );
+          //   name: restaurants.name,
+          //   logo: restaurants.logo,
+          // );
         },
       );
     }

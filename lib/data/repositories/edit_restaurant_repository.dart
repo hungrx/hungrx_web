@@ -1,3 +1,4 @@
+import 'package:hungrx_web/core/error/exceptions.dart';
 import 'package:hungrx_web/data/datasource/api/edit_restaurant_api.dart';
 import 'package:hungrx_web/data/models/edit_restaurant_model.dart';
 
@@ -16,7 +17,11 @@ class EditRestaurantRepository {
         logoName: restaurant.logoName,
       );
 
-      return EditRestaurantModel.fromJson(response['restaurant']);
+   if (response['restaurant'] != null) {
+        return EditRestaurantModel.fromJson(response['restaurant']);
+      } else {
+        throw EditRestaurantServerException('Invalid response format');
+      }
     } catch (e) {
       rethrow;
     }

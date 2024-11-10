@@ -22,6 +22,7 @@ class EditRestaurantModel {
   });
 
   EditRestaurantModel copyWith({
+    String? id,
     String? name,
     String? logoUrl,
     String? categoryId,
@@ -31,7 +32,7 @@ class EditRestaurantModel {
     String? logoName,
   }) {
     return EditRestaurantModel(
-      id: id,
+      id: id ?? this.id,
       name: name ?? this.name,
       logoUrl: logoUrl ?? this.logoUrl,
       categoryId: categoryId ?? this.categoryId,
