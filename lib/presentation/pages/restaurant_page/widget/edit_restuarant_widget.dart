@@ -19,6 +19,7 @@ class EditRestaurantDialog extends StatefulWidget {
   final String category;
   final String updatedAt;
   final String createdAt;
+  final Function() onUpdateSuccess;
   const EditRestaurantDialog({
     super.key,
     required this.name,
@@ -30,6 +31,7 @@ class EditRestaurantDialog extends StatefulWidget {
     required this.updatedAt,
     required this.createdAt,
     required this.categories,
+    required this.onUpdateSuccess,
   });
 
   @override
@@ -145,7 +147,8 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
     return BlocListener<EditRestaurantBloc, EditRestaurantState>(
       listener: (context, state) {
         if (state is EditRestaurantSuccessState) {
-          Navigator.of(context).pop(true); // Return true to indicate success
+          widget.onUpdateSuccess(); // Call the callback on success
+          Navigator.of(context).pop(); 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Restaurant updated successfully'),
@@ -153,7 +156,8 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
             ),
           );
         } else if (state is EditRestaurantErrorState) {
-          setState(() => _isLoading = false);
+          print(state.message);
+          setState(() => _isLoading = false); 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
@@ -289,7 +293,7 @@ class _EditRestaurantDialogState extends State<EditRestaurantDialog> {
         widget.categories.map((category) {
       return DropdownMenuItem<String>(
         value: category.id,
-        child: Text(category.name),
+        child: Text(category.name ??''),
       );
     }).toList();
 

@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hungrx_web/data/datasource/api/menu_search_api.dart';
+import 'package:hungrx_web/data/repositories/menu_search_repository.dart';
+import 'package:hungrx_web/presentation/bloc/menu_search/menu_search_bloc.dart';
 import 'package:hungrx_web/presentation/pages/common_food_page/common_food_screen.dart';
 import 'package:hungrx_web/presentation/pages/dashboard_page/dashboard_screen.dart';
 import 'package:hungrx_web/presentation/pages/grocery_page/grocery_screen.dart';
 import 'package:hungrx_web/presentation/pages/menu_page/restaurant_menu_screen.dart';
+import 'package:hungrx_web/presentation/pages/menu_page/widget/menu_search_screen.dart';
 import 'package:hungrx_web/presentation/pages/otp_verifiacation/otp_verification_screen.dart';
 import 'package:hungrx_web/presentation/pages/restaurant_page/restaurant_screen.dart';
 import 'package:hungrx_web/presentation/pages/restaurant_page/widget/search_results_page.dart';
 import 'route_names.dart';
+import 'package:http/http.dart' as http;
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -20,8 +26,7 @@ class AppRouter {
         builder: (context, state) => const DashboardScreen(),
       ),
       GoRoute(
-        path:
-            '/otp-verification/:phoneNumber/:name',
+        path: '/otp-verification/:phoneNumber/:name',
         name: 'otpVerify',
         builder: (context, state) {
           final phoneNumber = state.pathParameters['phoneNumber'] ?? '';
@@ -40,14 +45,35 @@ class AppRouter {
         },
         routes: [
           GoRoute(
+            name: 'menuSearch',
+            path: '/restaurants/:restaurantId/search',
+            builder: (context, state) {
+              final restaurantId = state.pathParameters['restaurantId'] ?? '';
+              final query = state.uri.queryParameters['q'] ?? '';
+
+              return BlocProvider(
+                create: (context) => MenuSearchBloc(
+                  repository: MenuSearchRepository(
+                    api: MenuSearchApi(client: http.Client()),
+                  ),
+                ),
+                child: MenuSearchScreen(
+                  restaurantId: restaurantId,
+                  initialQuery: query,
+                ),
+              );
+            },
+          ),
+          GoRoute(
             path: RouteNames.dashboard,
             name: 'dashboard',
             builder: (context, state) => const DashboardScreen(),
           ),
           GoRoute(
-            path: '/restaurant-menu/:name',
+            path: '/restaurant-menu/:id/:name',
             name: 'restaurant-menu',
             builder: (context, state) => RestaurantMenuScreen(
+              restaurantId: state.pathParameters['id'] ?? '',
               restaurantName: state.pathParameters['name'] ?? '',
             ),
           ),

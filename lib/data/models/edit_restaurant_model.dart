@@ -43,14 +43,13 @@ class EditRestaurantModel {
     );
   }
 
-  factory EditRestaurantModel.fromJson(Map<String, dynamic> json) {
+ factory EditRestaurantModel.fromJson(Map<String, dynamic> json) {
     return EditRestaurantModel(
-      id: json['_id'],
-      name: json['name'],
-      logoUrl: json['logo'],
-      categoryId: json['category'] ?? '',
-      rating: json['rating'].toDouble(),
-      description: json['description'],
+      id: json['_id'] as String,
+      name: json['name'] as String,
+      categoryId: (json['category'] as Map<String, dynamic>)['_id'] as String,
+      rating: (json['rating'] as num).toDouble(),
+      description: json['description'] as String,
     );
   }
 }

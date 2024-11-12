@@ -16,13 +16,13 @@ class SearchRestaurantBloc extends Bloc<SearchRestaurantEvent, SearchRestaurantS
     SearchRestaurantSubmitted event,
     Emitter<SearchRestaurantState> emit,
   ) async {
-    emit(SearchRestaurantLoading());
+    emit(SearchRestaurantLoading(event.query));
 
     try {
       final restaurants = await _searchRestaurantsUseCase.execute(event.query);
       emit(SearchRestaurantSuccess(restaurants, event.query));
     } catch (e) {
-      emit(SearchRestaurantError(e.toString()));
+      emit(SearchRestaurantError(e.toString(),event.query));
     }
   }
 

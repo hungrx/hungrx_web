@@ -40,25 +40,25 @@ class _AddRestaurantDialogState extends State<AddRestaurantDialog> {
     super.dispose();
   }
 
-Future<void> _pickImage() async {
-  try {
-    final MediaInfo? files = await ImagePickerWeb.getImageInfo(); // Call the function with parentheses
-    if (files != null && files.data != null) {
-      setState(() {
-        _imageBytes = files.data!;
-        _imageName = files.fileName ?? 'restaurant_image.jpg';
-      });
+  Future<void> _pickImage() async {
+    try {
+      final MediaInfo? files = await ImagePickerWeb
+          .getImageInfo(); // Call the function with parentheses
+      if (files != null && files.data != null) {
+        setState(() {
+          _imageBytes = files.data!;
+          _imageName = files.fileName ?? 'restaurant_image.jpg';
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error picking image. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Error picking image. Please try again.'),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
-}
-
 
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -97,8 +97,8 @@ Future<void> _pickImage() async {
 
         // Dispatch event to AddRestaurantBloc
         context.read<AddRestaurantBloc>().add(
-          AddRestaurantSubmitted(restaurant: restaurant),
-        );
+              AddRestaurantSubmitted(restaurant: restaurant),
+            );
       } catch (e) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -295,7 +295,7 @@ Future<void> _pickImage() async {
               items: widget.categories.map((category) {
                 return DropdownMenuItem(
                   value: category.id,
-                  child: Text(category.name),
+                  child: Text(category.name ?? ''),
                 );
               }).toList(),
               onChanged: (value) {
@@ -370,7 +370,8 @@ Future<void> _pickImage() async {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : const Text(

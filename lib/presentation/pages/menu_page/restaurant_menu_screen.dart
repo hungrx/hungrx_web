@@ -1,8 +1,14 @@
 // File: lib/presentation/pages/restaurant/restaurant_menu_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_web/core/widgets/custom_navbar.dart';
+import 'package:hungrx_web/data/models/menu_model.dart';
+import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_event.dart';
+import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_state.dart';
 import 'package:hungrx_web/presentation/layout/app_layout.dart';
+import 'package:hungrx_web/presentation/pages/menu_page/widget/category_management_widget.dart';
 import 'package:hungrx_web/presentation/pages/menu_page/widget/dish_card_widget.dart';
 import 'package:hungrx_web/presentation/pages/menu_page/widget/dish_edit_dialog.dart';
 
@@ -20,10 +26,12 @@ class MenuCategory {
 
 class RestaurantMenuScreen extends StatefulWidget {
   final String restaurantName;
+  final String restaurantId;
 
   const RestaurantMenuScreen({
     super.key,
     required this.restaurantName,
+    required this.restaurantId,
   });
 
   @override
@@ -33,7 +41,7 @@ class RestaurantMenuScreen extends StatefulWidget {
 class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   String selectedCategory = 'ALL';
   String selectedSubCategory = '';
-   bool isDrawerOpen = true;
+  bool isDrawerOpen = true;
   final List<MenuCategory> categories = [
     MenuCategory(name: 'ALL'),
     MenuCategory(
@@ -57,32 +65,95 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     MenuCategory(name: 'INCLUDED TOPPINGS'),
     MenuCategory(name: 'ADD-ONS'),
   ];
+  @override
+  void initState() {
+    print(widget.restaurantId);
+    super.initState();
+    // Dispatch the FetchMenu event with the restaurant ID
+    context.read<MenuBloc>().add(FetchMenu(widget.restaurantId));
+  }
 
   @override
-   Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return AppLayout(
       currentItem: NavbarItem.restaurant,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 1200;
-          final isTablet = constraints.maxWidth < 1200;
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (isDrawerOpen)
-                _buildMenuDrawer(isTablet),
-              Expanded(
-                child: _buildMainContent(isDesktop, isTablet),
+      child: BlocBuilder<MenuBloc, MenuState>(
+        builder: (context, state) {
+          return switch (state) {
+            MenuLoading() => const Center(
+                child: CircularProgressIndicator(),
               ),
-            ],
-          );
+            MenuError(message: final message) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Error loading menu: $message',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Retry fetching menu
+                        context
+                            .read<MenuBloc>()
+                            .add(FetchMenu(widget.restaurantId));
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            MenuLoaded(menu: final menu) => LayoutBuilder(
+                builder: (context, constraints) {
+                  final isDesktop = MediaQuery.of(context).size.width >= 1200;
+                  final isTablet = MediaQuery.of(context).size.width < 1200;
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isDrawerOpen) _buildMenuDrawer(isTablet),
+                      Expanded(
+                        child: _buildMainContent(
+                          isDesktop,
+                          isTablet,
+                          menu.data,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            MenuEmpty(message: final message) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      message,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        context
+                            .read<MenuBloc>()
+                            .add(FetchMenu(widget.restaurantId));
+                      },
+                      child: const Text('Refresh'),
+                    ),
+                  ],
+                ),
+              ),
+            MenuInitial() => const SizedBox.shrink(),
+            MenuState() => throw UnimplementedError(),
+          };
         },
       ),
     );
   }
 
-Widget _buildMenuDrawer(bool isTablet) {
+  Widget _buildMenuDrawer(bool isTablet) {
     return Container(
       width: isTablet ? 200 : 250,
       decoration: BoxDecoration(
@@ -113,13 +184,15 @@ Widget _buildMenuDrawer(bool isTablet) {
               },
             ),
           ),
-          _buildNewCategoryButton(isTablet),
+          CategoryManagementWidget(
+            isTablet: isTablet,
+          ),
         ],
       ),
     );
   }
 
- Widget _buildExpandableCategory(MenuCategory category, bool isTablet) {
+  Widget _buildExpandableCategory(MenuCategory category, bool isTablet) {
     final bool hasSubCategories = category.subCategories.isNotEmpty;
     final bool isSelected = category.name == selectedCategory;
 
@@ -148,7 +221,8 @@ Widget _buildMenuDrawer(bool isTablet) {
                     category.name,
                     style: TextStyle(
                       color: isSelected ? Colors.green : Colors.grey[700],
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                       fontSize: isTablet ? 13 : 14,
                     ),
                   ),
@@ -173,7 +247,8 @@ Widget _buildMenuDrawer(bool isTablet) {
                 });
               },
               child: Container(
-                color: isSubSelected ? Colors.green.shade50 : Colors.transparent,
+                color:
+                    isSubSelected ? Colors.green.shade50 : Colors.transparent,
                 padding: EdgeInsets.symmetric(
                   horizontal: isTablet ? 32 : 48,
                   vertical: isTablet ? 8 : 12,
@@ -196,51 +271,27 @@ Widget _buildMenuDrawer(bool isTablet) {
     );
   }
 
-  Widget _buildNewCategoryButton(bool isTablet) {
-    return Padding(
-      padding: EdgeInsets.all(isTablet ? 12.0 : 16.0),
-      child: ElevatedButton.icon(
-        onPressed: _showAddCategoryDialog,
-        icon: Icon(Icons.add, size: isTablet ? 18 : 24),
-        label: Text(
-          isTablet ? 'NEW' : 'NEW CATEGORY',
-          style: TextStyle(fontSize: isTablet ? 12 : 14),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green.shade600,
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(
-            vertical: isTablet ? 12 : 16,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      ),
-    );
-  }
-
-Widget _buildMainContent(bool isDesktop, bool isTablet) {
+  Widget _buildMainContent(bool isDesktop, bool isTablet, MenuData menuData) {
     return Padding(
       padding: EdgeInsets.all(isTablet ? 16.0 : 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(isDesktop, isTablet),
+          _buildHeader(isDesktop, isTablet, widget.restaurantName),
           SizedBox(height: isTablet ? 24 : 32),
           Expanded(
-            child: _buildDishesGrid(isDesktop, isTablet),
+            child: _buildDishesGrid(isDesktop, isTablet, menuData),
           ),
         ],
       ),
     );
   }
 
- Widget _buildHeader(bool isDesktop, bool isTablet) {
+  Widget _buildHeader(bool isDesktop, bool isTablet, String restaurantName) {
     return SizedBox(
       width: double.infinity,
       child: Row(
-       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -261,7 +312,7 @@ Widget _buildMainContent(bool isDesktop, bool isTablet) {
               ),
               const SizedBox(width: 16),
               Text(
-                widget.restaurantName.toUpperCase(),
+                restaurantName.toUpperCase(),
                 style: TextStyle(
                   fontSize: isTablet ? 24 : 32,
                   fontWeight: FontWeight.bold,
@@ -269,12 +320,10 @@ Widget _buildMainContent(bool isDesktop, bool isTablet) {
               ),
             ],
           ),
-      
-      
           ConstrainedBox(
             constraints: BoxConstraints(
-                maxWidth: isTablet ? 400 : 500,
-              ),
+              maxWidth: isTablet ? 400 : 500,
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -282,6 +331,17 @@ Widget _buildMainContent(bool isDesktop, bool isTablet) {
                   child: SizedBox(
                     width: isTablet ? 200 : 300,
                     child: TextField(
+                      onSubmitted: (value) {
+                        if (value.trim().isNotEmpty) {
+                          context.pushNamed(
+                            'menuSearch',
+                            pathParameters: {
+                              'restaurantId': widget.restaurantId
+                            },
+                            queryParameters: {'q': value},
+                          );
+                        }
+                      },
                       decoration: InputDecoration(
                         hintText: 'Search menu items...',
                         prefixIcon: const Icon(Icons.search),
@@ -326,7 +386,14 @@ Widget _buildMainContent(bool isDesktop, bool isTablet) {
     );
   }
 
-  Widget _buildDishesGrid(bool isDesktop, bool isTablet) {
+  Widget _buildDishesGrid(bool isDesktop, bool isTablet, MenuData menuData) {
+    // Checking if menu items are available
+    if (menuData.menu.isEmpty) {
+      return const Center(child: Text("No dishes available"));
+    }
+
+    final dishes = menuData.menu.expand((menu) => menu.dishes).toList();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         int crossAxisCount;
@@ -361,73 +428,45 @@ Widget _buildMainContent(bool isDesktop, bool isTablet) {
             crossAxisSpacing: spacing,
             mainAxisSpacing: spacing,
           ),
-          itemCount: 9,
-          itemBuilder: (context, index) => DishCard(
-            onTap: _showDishDetails,
-            onEdit: () async {
-              final result = await showDialog<Map<String, dynamic>>(
-                context: context,
-                builder: (context) => const DishEditDialog(
-                  initialData: {
-                    'name': 'SMOKED BRISKET',
-                    'price': 12.95,
-                    'calories': '360',
-                    'protein': '32',
-                    'carbs': '23',
-                    'fat': '50',
+          itemCount: dishes.length,
+          itemBuilder: (context, index) {
+            final dish = dishes[index];
+            return DishCard(
+              name: dish.name,
+              price:
+                  '\$${dish.nutritionFacts.calories}', // Example placeholder for price
+              calories: dish.nutritionFacts.calories.toString(),
+              protein: dish.nutritionFacts.protein.value.toString(),
+              carbs: "23G", // Placeholder for carbs, adjust if available
+              fat: dish.nutritionFacts.totalFat.value.toString(),
+              image: dish.image,
+              onTap: () => _showDishDetails(),
+              onEdit: () async {
+                final result = await showDialog<Map<String, dynamic>>(
+                  context: context,
+                  builder: (context) {
+                    return DishEditDialog(
+                      initialData: {
+                        'name': dish.name,
+                        'price': '\$12.95', // Example placeholder for price
+                        'calories': dish.nutritionFacts.calories.toString(),
+                        'protein': dish.nutritionFacts.protein.value.toString(),
+                        'carbs': "23G", // Placeholder for carbs
+                        'fat': dish.nutritionFacts.totalFat.value.toString(),
+                      },
+                    );
                   },
-                ),
-              );
-              
-              if (result != null) {
-                // Handle the updated dish data
-                print(result);
-              }
-            },
-          ),
+                );
+
+                if (result != null) {
+                  print(result);
+                }
+              },
+            );
+          },
         );
       },
     );
-  }
-
-  void _showAddCategoryDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final controller = TextEditingController();
-        return AlertDialog(
-          title: const Text('Add New Category'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Category Name',
-              hintText: 'Enter category name',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  setState(() {
-                    categories.add(MenuCategory(name: controller.text.toUpperCase()));
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-              ),
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      }
-      );
-    
   }
 
   void _showDishDetails() {

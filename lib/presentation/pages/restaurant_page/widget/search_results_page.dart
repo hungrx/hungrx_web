@@ -3,8 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_web/core/widgets/custom_navbar.dart';
 import 'package:hungrx_web/data/datasource/api/search_restaurant_api.dart';
+import 'package:hungrx_web/data/models/category_model.dart';
 import 'package:hungrx_web/data/repositories/search_restaurant_repository.dart';
 import 'package:hungrx_web/domain/usecase/search_restaurants_usecase.dart';
+import 'package:hungrx_web/presentation/bloc/restuarant_category/restuarant_category_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/restuarant_category/restuarant_category_state.dart';
 import 'package:hungrx_web/presentation/bloc/search_restaurants/search_restaurants_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/search_restaurants/search_restaurants_event.dart';
 import 'package:hungrx_web/presentation/bloc/search_restaurants/search_restaurants_state.dart';
@@ -90,7 +93,7 @@ class SearchResultsView extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, SearchRestaurantState state) {
+Widget _buildContent(BuildContext context, SearchRestaurantState state) {
     if (state is SearchRestaurantLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -107,7 +110,7 @@ class SearchResultsView extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => context.read<SearchRestaurantBloc>().add(
-                    SearchRestaurantSubmitted(state.toString()),
+                    SearchRestaurantSubmitted(state.searchQuery),
                   ),
               child: const Text('Retry'),
             ),
@@ -136,26 +139,45 @@ class SearchResultsView extends StatelessWidget {
         );
       }
 
-      return GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          childAspectRatio: 1.5,
-          crossAxisSpacing: 24,
-          mainAxisSpacing: 24,
-        ),
-        itemCount: state.restaurants.length,
-        itemBuilder: (context, index) {
-          final restaurants = state.restaurants[index];
-          return SizedBox();
-          // RestaurantCard(
-          
-          //   name: restaurants.name,
-          //   logo: restaurants.logo,
-          // );
+      return BlocBuilder<CategoryBloc, CategoryState>(
+        builder: (context, categoryState) {
+          List<CategoryModel> categories = 
+              categoryState is CategoryLoaded ? categoryState.categories : [];
+
+          return GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 1.5,
+              crossAxisSpacing: 24,
+              mainAxisSpacing: 24,
+            ),
+            itemCount: state.restaurants.length,
+            itemBuilder: (context, index) {
+              final restaurant = state.restaurants[index];
+              return RestaurantCard(
+                id: restaurant.id,
+                name: restaurant.name,
+                logo: restaurant.logo,
+                category: restaurant.category?.name ?? 'Uncategorized',
+                rating: restaurant.rating.toString(),
+                descrioption: restaurant.description ?? '',
+                categories: categories,
+                createdAt: restaurant.createdAt ??'',
+                updatedAt: restaurant.updatedAt??'',
+                onUpdateSuccess: () {
+                  // Refresh search results after update
+                  context.read<SearchRestaurantBloc>().add(
+                    SearchRestaurantSubmitted(state.searchQuery),
+                  );
+                },
+              );
+            },
+          );
         },
       );
     }
 
     return const SizedBox.shrink();
   }
+
 }

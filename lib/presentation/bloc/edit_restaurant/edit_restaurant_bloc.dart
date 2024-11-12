@@ -25,7 +25,7 @@ class EditRestaurantBloc extends Bloc<EditRestaurantEvent, EditRestaurantState> 
     } on EditRestaurantNetworkException catch (e) {
       emit(EditRestaurantErrorState(e.message));
     } catch (e) {
-      emit(EditRestaurantErrorState('An unexpected error occurred'));
+      emit(EditRestaurantErrorState('An unexpected error occurred: $e'));
     }
   }
 }

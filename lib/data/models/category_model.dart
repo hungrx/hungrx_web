@@ -1,14 +1,24 @@
 class CategoryModel {
   final String id;
-  final String name;
+  final String? name;
 
-  CategoryModel({required this.id, required this.name});
+  CategoryModel({required this.id,  this.name});
 
-  factory CategoryModel.fromJson(Map<String, dynamic> json) {
-    return CategoryModel(
-      id: json['_id'] as String,
-      name: json['name'] as String,
-    );
+factory CategoryModel.fromJson(dynamic json) {
+    // Handle case where json is just the category ID string
+    if (json is String) {
+      return CategoryModel(id: json, name: '');
+    }
+    
+    // Handle case where json is a Map containing category details
+    if (json is Map<String, dynamic>) {
+      return CategoryModel(
+        id: json['_id']?.toString() ?? '',
+        name: json['name']?.toString(),
+      );
+    }
+
+    throw Exception('Invalid category data format');
   }
 
   Map<String, dynamic> toJson() {

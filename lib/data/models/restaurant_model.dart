@@ -1,10 +1,12 @@
+import 'package:hungrx_web/data/models/category_model.dart';
+
 class RestaurantModel {
   final String id;
   final String name;
   final String logo;
   final double? rating;
   final String? description;
-  final String? category;
+  final CategoryModel? category;
   final String? createdAt;
   final String? updatedAt;
 
@@ -20,16 +22,27 @@ class RestaurantModel {
   });
 
   factory RestaurantModel.fromJson(Map<String, dynamic> json) {
-    return RestaurantModel(
-      id: json['_id'] as String,
-      name: json['name'] as String,
-      logo: json['logo'] as String,
-      rating: json['rating']?.toDouble(),
-      description: json['description'] as String?,
-      category: json['category'] as String?,
-      createdAt: json['createdAt'] as String?,
-      updatedAt: json['updatedAt'] as String?,
-    );
+    try {
+      return RestaurantModel(
+        id: json['_id']?.toString() ?? '',  // Convert to String safely
+        name: json['name']?.toString() ?? '',
+        logo: json['logo']?.toString() ?? '',
+        rating: json['rating'] == null 
+            ? null 
+            : double.tryParse(json['rating'].toString()),  // Safe conversion
+        description: json['description']?.toString(),
+        category: json['category'] == null 
+            ? null 
+            : CategoryModel.fromJson(json['category']),
+        createdAt: json['createdAt']?.toString(),
+        updatedAt: json['updatedAt']?.toString(),
+      );
+    } catch (e) {
+      print('Error parsing RestaurantModel: $e');
+      // Return a default model or rethrow based on your needs
+      throw Exception('Failed to parse restaurant data: $e');
+    }
+  
   }
 
   Map<String, dynamic> toJson() => {

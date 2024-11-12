@@ -156,7 +156,7 @@ class RestaurantScreen extends HookWidget {
         color: isSelected ? Colors.green.shade100 : Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Text(
-          category.name.toUpperCase(),
+          category.name ??'',
           style: TextStyle(
             color: isSelected ? Colors.green : Colors.grey[700],
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -248,104 +248,102 @@ class RestaurantScreen extends HookWidget {
   }
 
   Widget _buildRestaurantGrid(
-  bool isDesktop,
-  bool isTablet,
-) {
-  return MultiBlocListener(
-    listeners: [
-      BlocListener<RestaurantBloc, RestaurantState>(
-        listener: (context, state) {
-          // Handle RestaurantBloc-specific actions here if needed
+    bool isDesktop,
+    bool isTablet,
+  ) {
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<RestaurantBloc, RestaurantState>(
+          listener: (context, state) {
+            // Handle RestaurantBloc-specific actions here if needed
+          },
+        ),
+        BlocListener<CategoryBloc, CategoryState>(
+          listener: (context, state) {
+            // Handle CategoryBloc-specific actions here if needed
+          },
+        ),
+      ],
+      child: BlocBuilder<RestaurantBloc, RestaurantState>(
+        builder: (context, restaurantState) {
+          if (restaurantState is RestaurantLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (restaurantState is RestaurantError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Error loading restaurants',
+                    style: TextStyle(color: Colors.red[700]),
+                  ),
+                  ElevatedButton(
+                    onPressed: () =>
+                        context.read<RestaurantBloc>().add(FetchRestaurants()),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (restaurantState is RestaurantLoaded) {
+            return BlocBuilder<CategoryBloc, CategoryState>(
+              builder: (context, categoryState) {
+                List<CategoryModel> categories = []; // Default empty categories
+
+                if (categoryState is CategoryLoaded) {
+                  categories = categoryState.categories;
+                }
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    int crossAxisCount;
+                    if (isDesktop) {
+                      crossAxisCount = constraints.maxWidth > 1500 ? 4 : 3;
+                    } else {
+                      crossAxisCount = constraints.maxWidth > 800 ? 2 : 1;
+                    }
+
+                    return GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        childAspectRatio: isTablet ? 1.3 : 1.5,
+                        crossAxisSpacing: isTablet ? 16 : 24,
+                        mainAxisSpacing: isTablet ? 16 : 24,
+                      ),
+                      itemCount: restaurantState.restaurants.length,
+                      itemBuilder: (context, index) {
+                        final restaurant = restaurantState.restaurants[index];
+                        return RestaurantCard(
+                          categories: categories,
+                          updatedAt: restaurant.updatedAt ?? "",
+                          category: restaurant.category?.id ?? "",
+                          createdAt: restaurant.createdAt ?? "",
+                          descrioption: restaurant.description ?? "",
+                          id: restaurant.id,
+                          rating: restaurant.rating.toString(),
+                          name: restaurant.name,
+                          logo: restaurant.logo,
+                          onUpdateSuccess: () {
+                            context
+                                .read<RestaurantBloc>()
+                                .add(FetchRestaurants());
+                          },
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            );
+          }
+
+          return const Center(child: Text('No restaurants found'));
         },
       ),
-      BlocListener<CategoryBloc, CategoryState>(
-        listener: (context, state) {
-          // Handle CategoryBloc-specific actions here if needed
-        },
-      ),
-    ],
-    child: BlocBuilder<RestaurantBloc, RestaurantState>(
-      builder: (context, restaurantState) {
-        if (restaurantState is RestaurantLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (restaurantState is RestaurantError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Error loading restaurants',
-                  style: TextStyle(color: Colors.red[700]),
-                ),
-                ElevatedButton(
-                  onPressed: () =>
-                      context.read<RestaurantBloc>().add(FetchRestaurants()),
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (restaurantState is RestaurantLoaded) {
-          return BlocBuilder<CategoryBloc, CategoryState>(
-            builder: (context, categoryState) {
-              List<CategoryModel> categories = []; // Default empty categories
-
-              if (categoryState is CategoryLoaded) {
-                categories = categoryState.categories;
-              }
-
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  int crossAxisCount;
-                  if (isDesktop) {
-                    crossAxisCount = constraints.maxWidth > 1500 ? 4 : 3;
-                  } else {
-                    crossAxisCount = constraints.maxWidth > 800 ? 2 : 1;
-                  }
-
-                  return GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      childAspectRatio: isTablet ? 1.3 : 1.5,
-                      crossAxisSpacing: isTablet ? 16 : 24,
-                      mainAxisSpacing: isTablet ? 16 : 24,
-                    ),
-                    itemCount: restaurantState.restaurants.length,
-                    itemBuilder: (context, index) {
-                      final restaurant = restaurantState.restaurants[index];
-
-              //         final restaurantCategory = categories.firstWhere(
-              //   (cat) => cat.id == restaurant.categoryId,  // Assuming your restaurant model has categoryId
-              //   orElse: () => categories.first, // Fallback to first category if not found
-              // );
-
-                      return RestaurantCard(
-                        categories: categories,
-                        updatedAt: restaurant.updatedAt ?? "",
-                        category: restaurant.category ?? "",
-                        createdAt: restaurant.createdAt ?? "",
-                        descrioption: restaurant.description ?? "",
-                        id: restaurant.id,
-                        rating: restaurant.rating.toString(),
-                        name: restaurant.name,
-                        logo: restaurant.logo,
-                      );
-                    },
-                  );
-                },
-              );
-            },
-          );
-        }
-
-        return const Center(child: Text('No restaurants found'));
-      },
-    ),
-  );
-}
-
+    );
+  }
 }

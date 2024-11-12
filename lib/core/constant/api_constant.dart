@@ -4,4 +4,5 @@ class ApiConstants {
   static const String getAllCategories = '$baseUrl/files/getAllcategories';
   static const String addRestaurant = '/files/addRestaurant';
   static const String editRestaurant = '/files/editRestaurant';
+  static const String addMenuCategory = '/files/addMenuCategory';
 }

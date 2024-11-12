@@ -18,7 +18,7 @@ class RestaurantCard extends HookWidget {
   final String category;
   final String updatedAt;
   final String createdAt;
-
+final Function() onUpdateSuccess; 
   const RestaurantCard( {
     super.key,
     required this.categories,
@@ -30,6 +30,7 @@ class RestaurantCard extends HookWidget {
     required this.createdAt,
     required this.name,
     required this.logo,
+    required this.onUpdateSuccess,
   });
 
   String _sanitizeImageUrl(String url) {
@@ -55,7 +56,7 @@ class RestaurantCard extends HookWidget {
       onExit: (_) => isHovered.value = false,
       child: GestureDetector(
         onTap: () {
-          context.push('/restaurant-menu/$name');
+          context.push('/restaurant-menu/$id/${Uri.encodeComponent(name)}');
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -130,6 +131,7 @@ class RestaurantCard extends HookWidget {
                                     builder: (_) => BlocProvider.value(
                                       value: context.read<EditRestaurantBloc>(),
                                       child: EditRestaurantDialog(
+                                        onUpdateSuccess: onUpdateSuccess,
                                         categories: categories,
                                         updatedAt: updatedAt,
                                         category: category,

@@ -21,7 +21,8 @@ print(response.statusCode);
             .map((json) => SearchRestaurantModel.fromJson(json))
             .toList();
       } else {
-        throw Exception('Failed to search restaurants');
+          final Map<String, dynamic> errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? 'Failed to search restaurants');
       }
     } catch (e) {
       throw Exception('Network error: ${e.toString()}');

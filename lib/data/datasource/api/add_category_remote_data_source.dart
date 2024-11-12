@@ -17,8 +17,8 @@ class AddCategoryDataSource {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(request.toJson()),
       );
-        print(response.body);
-      print(response.statusCode);
+      //   print(response.body);
+      // print(response.statusCode);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final jsonResponse = json.decode(response.body);

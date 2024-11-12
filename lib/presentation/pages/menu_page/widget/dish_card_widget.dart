@@ -2,11 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
 class DishCard extends HookWidget {
+  final String name;
+  final String price;
+  final String calories;
+  final String protein;
+  final String carbs;
+  final String fat;
+  final String image;
   final VoidCallback onTap;
   final VoidCallback onEdit;
 
   const DishCard({
     super.key,
+    required this.name,
+    required this.price,
+    required this.calories,
+    required this.protein,
+    required this.carbs,
+    required this.fat,
+    required this.image,
     required this.onTap,
     required this.onEdit,
   });
@@ -55,8 +69,8 @@ class DishCard extends HookWidget {
                           ).createShader(bounds);
                         },
                         blendMode: BlendMode.darken,
-                        child: Image.asset(
-                          'assets/images/smoked_brisket.jpg',
+                        child: Image.network(
+                          image,
                           width: double.infinity,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
@@ -129,20 +143,21 @@ class DishCard extends HookWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'SMOKED BRISKET',
-                            style: TextStyle(
+                            name,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            '\$12.95',
-                            style: TextStyle(
+                            price,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -150,10 +165,10 @@ class DishCard extends HookWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      _buildNutritionInfo('CALORIE', '360G'),
-                      _buildNutritionInfo('PROTEIN', '32G'),
-                      _buildNutritionInfo('CARBS', '23G'),
-                      _buildNutritionInfo('FAT', '50G'),
+                      _buildNutritionInfo('CALORIES', calories),
+                      _buildNutritionInfo('PROTEIN', protein),
+                      _buildNutritionInfo('CARBS', carbs),
+                      _buildNutritionInfo('FAT', fat),
                       const SizedBox(height: 4),
                       Text(
                         'LAST UPDATE: 12/20/2024 12:32 AM',
