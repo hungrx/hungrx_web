@@ -471,11 +471,10 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
             final dish = dishes[index];
             return DishCard(
               name: dish.name,
-              price:
-                  '\$${dish.nutritionFacts.calories}', // Example placeholder for price
+              price:'\$${dish.nutritionFacts.calories.toString()}', 
               calories: dish.nutritionFacts.calories.toString(),
               protein: dish.nutritionFacts.protein.value.toString(),
-              carbs: "23G", // Placeholder for carbs, adjust if available
+              carbs: dish.nutritionFacts.totalCarbohydrates.toString(), 
               fat: dish.nutritionFacts.totalFat.value.toString(),
               image: dish.image,
               onTap: () => _showDishDetails(),
@@ -484,9 +483,12 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   context: context,
                   builder: (context) {
                     return DishEditDialog(
+                      dishId: dish.id,
+                      menuId:menuData.menu.first.id,
+                      restaurantId: widget.restaurantId,
                       initialData: {
                         'name': dish.name,
-                        'price': '\$12.95', // Example placeholder for price
+                        'price': '12.95', // Example placeholder for price
                         'calories': dish.nutritionFacts.calories.toString(),
                         'protein': dish.nutritionFacts.protein.value.toString(),
                         'carbs': "23G", // Placeholder for carbs

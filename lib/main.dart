@@ -9,6 +9,7 @@ import 'package:hungrx_web/data/datasource/api/menu_category_api_service.dart';
 import 'package:hungrx_web/data/repositories/add_category_repository.dart';
 import 'package:hungrx_web/data/repositories/category_repository_impl.dart';
 import 'package:hungrx_web/data/repositories/category_subcategory_repository.dart';
+import 'package:hungrx_web/data/repositories/dish_edit_repository.dart';
 import 'package:hungrx_web/data/repositories/get_menu_category_repository.dart';
 import 'package:hungrx_web/data/repositories/menu_repository.dart';
 import 'package:hungrx_web/data/repositories/menu_repository_impl.dart';
@@ -18,6 +19,7 @@ import 'package:hungrx_web/domain/usecase/get_categories_usecase.dart';
 import 'package:hungrx_web/domain/usecase/get_menu_usecase.dart';
 import 'package:hungrx_web/domain/usecase/get_restaurants_usecase.dart';
 import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/dish_editing/dish_editing_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/get_menu_category/get_menu_category_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/login_page/login_page_bloc.dart';
@@ -52,6 +54,11 @@ class MyApp extends StatelessWidget {
     final MenuApiService menuApiService = MenuApiService();
     return MultiBlocProvider(
       providers: [
+        BlocProvider<DishEditBloc>(
+          create: (context) => DishEditBloc(
+            repository: DishEditRepository(),
+          ),
+        ),
         BlocProvider(
           create: (context) => GetMenuCategoryBloc(
             repository: GetMenuCategoryRepository(
