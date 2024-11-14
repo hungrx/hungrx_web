@@ -6,19 +6,19 @@ class RestaurantImageWidget extends StatelessWidget {
   final double? width;
   final double? height;
   final BoxFit fit;
+  final Function? onTap;
 
   const RestaurantImageWidget({
     super.key,
     required this.imageUrl,
     this.width,
     this.height,
-    this.fit = BoxFit.cover,
+    this.fit = BoxFit.cover, this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return ImageNetwork(
-    
       image: imageUrl,
       width: width??100,
       height: height??100,
@@ -60,7 +60,7 @@ class RestaurantImageWidget extends StatelessWidget {
         ),
       ),
       onTap: () {
-        debugPrint("Image tapped");
+        onTap;
       },
     );
   }

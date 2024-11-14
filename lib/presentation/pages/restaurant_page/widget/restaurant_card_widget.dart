@@ -94,6 +94,9 @@ final Function() onUpdateSuccess;
                         },
                         blendMode: BlendMode.darken,
                         child: RestaurantImageWidget(
+                          onTap: (){
+                            context.push('/restaurant-menu/$id/${Uri.encodeComponent(name)}');
+                          },
                           height: MediaQuery.of(context).size.width * .2,
                           imageUrl: sanitizedImageUrl,
                           width: MediaQuery.of(context).size.width * .25,

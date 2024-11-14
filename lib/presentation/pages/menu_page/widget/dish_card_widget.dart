@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hungrx_web/presentation/pages/restaurant_page/widget/restuarant_image_widget.dart';
 
 class DishCard extends HookWidget {
   final String name;
@@ -69,25 +70,14 @@ class DishCard extends HookWidget {
                           ).createShader(bounds);
                         },
                         blendMode: BlendMode.darken,
-                        child: Image.network(
-                          image,
-                          width: double.infinity,
+                        child: 
+                        RestaurantImageWidget(
+                          height: MediaQuery.of(context).size.width * .2,
+                          imageUrl: image,
+                          width: MediaQuery.of(context).size.width * .35,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey.shade200,
-                              child: const Center(
-                                child: Icon(
-                                  Icons.fastfood,
-                                  size: 50,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            );
-                          },
                         ),
                       ),
-                      // Animated edit button
                       AnimatedPositioned(
                         duration: const Duration(milliseconds: 200),
                         top: 8,
@@ -144,22 +134,31 @@ class DishCard extends HookWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                          Expanded(
+                            flex: 7,
+                            child: Text(
+                              name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
-                          Text(
-                            price,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              price,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.right,
                             ),
                           ),
                         ],
@@ -170,12 +169,16 @@ class DishCard extends HookWidget {
                       _buildNutritionInfo('CARBS', carbs),
                       _buildNutritionInfo('FAT', fat),
                       const SizedBox(height: 4),
-                      Text(
-                        'LAST UPDATE: 12/20/2024 12:32 AM',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey[600],
-                          letterSpacing: 0.3,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'LAST UPDATE: 12/20/2024 12:32 AM',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[600],
+                            letterSpacing: 0.3,
+                          ),
                         ),
                       ),
                     ],
@@ -191,22 +194,32 @@ class DishCard extends HookWidget {
 
   Widget _buildNutritionInfo(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                letterSpacing: 0.5,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
             ),
           ),
         ],

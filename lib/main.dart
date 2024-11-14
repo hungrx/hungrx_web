@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_web/data/datasource/api/add_category_remote_data_source.dart';
 import 'package:hungrx_web/data/datasource/api/category_remote_data_source.dart';
+import 'package:hungrx_web/data/datasource/api/category_subcategory_api.dart';
+import 'package:hungrx_web/data/datasource/api/get_menu_category_api.dart';
 import 'package:hungrx_web/data/datasource/api/menu_api.dart';
 import 'package:hungrx_web/data/datasource/api/menu_category_api_service.dart';
 import 'package:hungrx_web/data/repositories/add_category_repository.dart';
 import 'package:hungrx_web/data/repositories/category_repository_impl.dart';
+import 'package:hungrx_web/data/repositories/category_subcategory_repository.dart';
+import 'package:hungrx_web/data/repositories/get_menu_category_repository.dart';
 import 'package:hungrx_web/data/repositories/menu_repository.dart';
 import 'package:hungrx_web/data/repositories/menu_repository_impl.dart';
 import 'package:hungrx_web/data/repositories/restaurant_repository.dart';
@@ -15,8 +19,11 @@ import 'package:hungrx_web/domain/usecase/get_menu_usecase.dart';
 import 'package:hungrx_web/domain/usecase/get_restaurants_usecase.dart';
 import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/get_menu_category/get_menu_category_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/login_page/login_page_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/menu_category/menu_category_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/menu_catgory_subcategory/menu_category_subcategory_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/menu_catgory_subcategory/menu_category_subcategory_event.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/otp_verification/otp_verification_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_bloc.dart';
@@ -45,6 +52,15 @@ class MyApp extends StatelessWidget {
     final MenuApiService menuApiService = MenuApiService();
     return MultiBlocProvider(
       providers: [
+        BlocProvider(
+          create: (context) => GetMenuCategoryBloc(
+            repository: GetMenuCategoryRepository(
+              api: GetMenuCategoryApi(
+                client: http.Client(),
+              ),
+            ),
+          ),
+        ),
         BlocProvider<MenuBloc>(
           create: (_) => MenuBloc(
             getMenuUseCase,
@@ -73,6 +89,13 @@ class MyApp extends StatelessWidget {
               ),
             ),
           ),
+        ),
+        BlocProvider(
+          create: (context) => CategorySubcategoryBloc(
+            repository: CategorySubcategoryRepository(
+              api: CategorySubcategoryApi(),
+            ),
+          )..add(FetchCategoriesAndSubcategories()),
         ),
 
         BlocProvider(create: (context) => AddRestaurantBloc()),

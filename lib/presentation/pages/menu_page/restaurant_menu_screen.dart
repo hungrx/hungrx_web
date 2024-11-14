@@ -4,6 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_web/core/widgets/custom_navbar.dart';
 import 'package:hungrx_web/data/models/menu_model.dart';
+import 'package:hungrx_web/presentation/bloc/get_menu_category/get_menu_category_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/get_menu_category/get_menu_category_event.dart';
+import 'package:hungrx_web/presentation/bloc/get_menu_category/get_menu_category_state.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_event.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_state.dart';
@@ -42,114 +45,149 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   String selectedCategory = 'ALL';
   String selectedSubCategory = '';
   bool isDrawerOpen = true;
-  final List<MenuCategory> categories = [
-    MenuCategory(name: 'ALL'),
-    MenuCategory(
-      name: 'BURRITO',
-      subCategories: ['CHICKEN', 'BEEF', 'VEGGIE'],
-    ),
-    MenuCategory(
-      name: 'BUTTITO BOWL',
-      subCategories: ['CLASSIC', 'SPECIAL'],
-    ),
-    MenuCategory(
-      name: 'LIFESTYLE BOWL',
-      subCategories: ['KETO', 'PALEO', 'WHOLE30'],
-    ),
-    MenuCategory(name: 'QUESADILLA'),
-    MenuCategory(
-      name: 'SALAD',
-      subCategories: ['REGULAR', 'PROTEIN'],
-    ),
-    MenuCategory(name: 'TORTILLA'),
-    MenuCategory(name: 'INCLUDED TOPPINGS'),
-    MenuCategory(name: 'ADD-ONS'),
-  ];
+  List<MenuCategory> categories = [];
+  bool _isInitialized = false;
+
   @override
-  void initState() {
-    print(widget.restaurantId);
-    super.initState();
-    // Dispatch the FetchMenu event with the restaurant ID
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      print('Initializing data for restaurant: ${widget.restaurantId}');
+      _initializeData();
+      _isInitialized = true;
+    }
+  }
+
+  void _initializeData() {
+    if (!mounted) return;
     context.read<MenuBloc>().add(FetchMenu(widget.restaurantId));
+    context
+        .read<GetMenuCategoryBloc>()
+        .add(FetchMenuCategories(widget.restaurantId));
   }
 
   @override
   Widget build(BuildContext context) {
     return AppLayout(
       currentItem: NavbarItem.restaurant,
-      child: BlocBuilder<MenuBloc, MenuState>(
-        builder: (context, state) {
-          return switch (state) {
-            MenuLoading() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-            MenuError(message: final message) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Error loading menu: $message',
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Retry fetching menu
-                        context
-                            .read<MenuBloc>()
-                            .add(FetchMenu(widget.restaurantId));
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            MenuLoaded(menu: final menu) => LayoutBuilder(
-                builder: (context, constraints) {
-                  final isDesktop = MediaQuery.of(context).size.width >= 1200;
-                  final isTablet = MediaQuery.of(context).size.width < 1200;
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (isDrawerOpen) _buildMenuDrawer(isTablet),
-                      Expanded(
-                        child: _buildMainContent(
-                          isDesktop,
-                          isTablet,
-                          menu.data,
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            MenuEmpty(message: final message) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      message,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context
-                            .read<MenuBloc>()
-                            .add(FetchMenu(widget.restaurantId));
-                      },
-                      child: const Text('Refresh'),
-                    ),
-                  ],
-                ),
-              ),
-            MenuInitial() => const SizedBox.shrink(),
-            MenuState() => throw UnimplementedError(),
-          };
-        },
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<GetMenuCategoryBloc, GetMenuCategoryState>(
+            listener: (context, categoryState) {
+              if (categoryState is GetMenuCategoryLoaded && mounted) {
+                print('Categories loaded: ${categoryState.categories.length}');
+                setState(() {
+                  categories = [
+                    MenuCategory(name: 'ALL'), // Default category
+                    ...categoryState.categories.map((category) => MenuCategory(
+                          name: category.name,
+                          subCategories: category.subcategories
+                              .map((sub) => sub.name)
+                              .toList(),
+                          isExpanded: false,
+                        )),
+                  ];
+                });
+              }else if (categoryState is GetMenuCategoryError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(categoryState.message)),
+                );
+              }
+            },
+          ),
+          BlocListener<MenuBloc, MenuState>(
+            listener: (context, menuState) {
+              if (menuState is MenuError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(menuState.message)),
+                );
+              }
+            },
+          ),
+        ],
+        child: BlocBuilder<MenuBloc, MenuState>(
+          builder: (context, state) {
+            return _buildContent(state);
+          },
+        ),
       ),
+    );
+  }
+
+  Widget _buildContent(MenuState state) {
+    return switch (state) {
+      MenuLoading() => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      MenuError(message: final message) => _buildErrorWidget(message),
+      MenuLoaded(menu: final menu) => _buildLoadedContent(menu.data),
+      MenuEmpty(message: final message) => _buildEmptyWidget(message),
+      MenuInitial() => const SizedBox.shrink(),
+      _ => const SizedBox.shrink(),
+    };
+  }
+
+  Widget _buildErrorWidget(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Error loading menu: $message',
+            style: const TextStyle(color: Colors.red),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => _initializeData(),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyWidget(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => _initializeData(),
+            child: const Text('Refresh'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadedContent(dynamic menuData) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = MediaQuery.of(context).size.width >= 1200;
+        final isTablet = MediaQuery.of(context).size.width < 1200;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isDrawerOpen) _buildMenuDrawer(isTablet),
+            Expanded(
+              child: _buildMainContent(
+                isDesktop,
+                isTablet,
+                menuData,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

@@ -28,6 +28,7 @@ class _DishEditDialogState extends State<DishEditDialog> {
   late final TextEditingController _carbsController;
   late final TextEditingController _fatController;
   late final TextEditingController _servingSizeController;
+  late TextEditingController _ratingController;
 
   // Category data
   final Map<String, List<String>> categoryMap = {
@@ -53,7 +54,7 @@ class _DishEditDialogState extends State<DishEditDialog> {
     _carbsController = TextEditingController(text: widget.initialData?['carbs'] ?? '');
     _fatController = TextEditingController(text: widget.initialData?['fat'] ?? '');
     _servingSizeController = TextEditingController(text: widget.initialData?['servingSize'] ?? '');
-    
+    _ratingController = TextEditingController(text: "4.2");
     _selectedMainCategory = widget.initialData?['mainCategory'];
     _selectedSubCategory = widget.initialData?['subCategory'];
   }
@@ -179,6 +180,7 @@ class _DishEditDialogState extends State<DishEditDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 16),
         TextFormField(
           controller: _nameController,
           decoration: const InputDecoration(
@@ -211,6 +213,28 @@ class _DishEditDialogState extends State<DishEditDialog> {
             return null;
           },
         ),
+         const SizedBox(height: 16),
+           TextFormField(
+              controller: _ratingController,
+              
+              decoration: InputDecoration(
+                labelText: 'RATING (1 - 5)',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter rating';
+                }
+                final rating = double.tryParse(value);
+                if (rating == null || rating < 1 || rating > 5) {
+                  return 'Rating must be between 1 and 5';
+                }
+                return null;
+              },
+            ),
         const SizedBox(height: 16),
         TextFormField(
           controller: _descriptionController,
