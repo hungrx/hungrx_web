@@ -1,9 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_web/data/models/login_request.dart';
-import 'package:hungrx_web/data/models/otp_verification_request.dart';
-import 'package:hungrx_web/data/repositories/auth_repository_impl.dart';
-import 'package:hungrx_web/domain/usecase/send_otp_usecase.dart';
-import 'package:hungrx_web/domain/usecase/verify_otp_usecase.dart';
+import 'package:hungrx_web/data/models/auth_models/login_request.dart';
+import 'package:hungrx_web/data/models/auth_models/otp_verification_request.dart';
+import 'package:hungrx_web/data/repositories/auth_repo/auth_repository_impl.dart';
+import 'package:hungrx_web/domain/usecase/auth_usecase/send_otp_usecase.dart';
+import 'package:hungrx_web/domain/usecase/auth_usecase/verify_otp_usecase.dart';
 import 'package:hungrx_web/presentation/bloc/otp_verification/otp_verification_event.dart';
 import 'package:hungrx_web/presentation/bloc/otp_verification/otp_verification_state.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_web/data/repositories/dish_edit_repository.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/dish_edit_repository.dart';
 import 'package:hungrx_web/presentation/bloc/dish_editing/dish_editing_event.dart';
 import 'package:hungrx_web/presentation/bloc/dish_editing/dish_editing_state.dart';
 

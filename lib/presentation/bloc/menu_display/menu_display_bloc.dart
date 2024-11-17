@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_web/core/error/menu_exception.dart';
-import 'package:hungrx_web/domain/usecase/get_menu_usecase.dart';
+import 'package:hungrx_web/domain/usecase/manu_usecase/get_menu_usecase.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_event.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_state.dart';
 

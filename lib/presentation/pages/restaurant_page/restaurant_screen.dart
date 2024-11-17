@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_web/core/widgets/custom_header.dart';
 import 'package:hungrx_web/core/widgets/custom_navbar.dart';
-import 'package:hungrx_web/data/models/category_model.dart';
+import 'package:hungrx_web/data/models/restaurant_models/category_model.dart';
 import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_event.dart';
@@ -317,21 +317,25 @@ class RestaurantScreen extends HookWidget {
                       itemCount: restaurantState.restaurants.length,
                       itemBuilder: (context, index) {
                         final restaurant = restaurantState.restaurants[index];
-                        return RestaurantCard(
-                          categories: categories,
-                          updatedAt: restaurant.updatedAt ?? "",
-                          category: restaurant.category?.id ?? "",
-                          createdAt: restaurant.createdAt ?? "",
-                          descrioption: restaurant.description ?? "",
-                          id: restaurant.id,
-                          rating: restaurant.rating.toString(),
-                          name: restaurant.name,
-                          logo: restaurant.logo,
-                          onUpdateSuccess: () {
-                            context
-                                .read<RestaurantBloc>()
-                                .add(FetchRestaurants());
-                          },
+                        return MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: RestaurantCard(
+                            key: ValueKey(restaurant.id),
+                            categories: categories,
+                            updatedAt: restaurant.updatedAt ?? "",
+                            category: restaurant.category?.id ?? "",
+                            createdAt: restaurant.createdAt ?? "",
+                            descrioption: restaurant.description ?? "",
+                            id: restaurant.id,
+                            rating: restaurant.rating.toString(),
+                            name: restaurant.name,
+                            logo: restaurant.logo,
+                            onUpdateSuccess: () {
+                              context
+                                  .read<RestaurantBloc>()
+                                  .add(FetchRestaurants());
+                            },
+                          ),
                         );
                       },
                     );

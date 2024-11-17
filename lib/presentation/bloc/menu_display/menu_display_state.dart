@@ -1,4 +1,4 @@
-import 'package:hungrx_web/data/models/menu_model.dart';
+import 'package:hungrx_web/data/models/menu_models/menu_model.dart';
 
 abstract class MenuState {}
 

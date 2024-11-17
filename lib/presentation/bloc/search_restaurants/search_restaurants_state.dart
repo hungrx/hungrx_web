@@ -1,4 +1,4 @@
-import 'package:hungrx_web/data/models/search_restaurant_model.dart';
+import 'package:hungrx_web/data/models/restaurant_models/search_restaurant_model.dart';
 
 abstract class SearchRestaurantState {
   final String searchQuery;

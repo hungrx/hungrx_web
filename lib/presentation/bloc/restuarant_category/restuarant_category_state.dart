@@ -1,4 +1,4 @@
-import 'package:hungrx_web/data/models/category_model.dart';
+import 'package:hungrx_web/data/models/restaurant_models/category_model.dart';
 
 abstract class CategoryState {}
 

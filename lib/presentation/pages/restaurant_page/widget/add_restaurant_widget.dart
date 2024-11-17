@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_web/data/models/add_restaurant_model.dart';
-import 'package:hungrx_web/data/models/category_model.dart';
+import 'package:hungrx_web/data/models/restaurant_models/add_restaurant_model.dart';
+import 'package:hungrx_web/data/models/restaurant_models/category_model.dart';
 import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_event.dart';
 import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_state.dart';

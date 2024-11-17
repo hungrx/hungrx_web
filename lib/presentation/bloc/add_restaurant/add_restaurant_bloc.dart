@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_web/domain/usecase/add_restaurant_usecase.dart';
+import 'package:hungrx_web/domain/usecase/restaurant_usecase/add_restaurant_usecase.dart';
 import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_event.dart';
 import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_state.dart';
 

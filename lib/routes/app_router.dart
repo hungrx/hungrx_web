@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hungrx_web/data/datasource/api/menu_search_api.dart';
-import 'package:hungrx_web/data/repositories/menu_search_repository.dart';
+import 'package:hungrx_web/data/datasource/api/menu_api/menu_search_api.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/menu_search_repository.dart';
 import 'package:hungrx_web/presentation/bloc/menu_search/menu_search_bloc.dart';
 import 'package:hungrx_web/presentation/pages/common_food_page/common_food_screen.dart';
 import 'package:hungrx_web/presentation/pages/dashboard_page/dashboard_screen.dart';

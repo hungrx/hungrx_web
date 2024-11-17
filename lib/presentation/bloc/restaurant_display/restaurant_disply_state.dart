@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:hungrx_web/data/models/restaurant_model.dart';
+import 'package:hungrx_web/data/models/restaurant_models/restaurant_model.dart';
 
 
 abstract class RestaurantState extends Equatable {

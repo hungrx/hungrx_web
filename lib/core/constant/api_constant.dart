@@ -6,4 +6,5 @@ class ApiConstants {
   static const String editRestaurant = '/files/editRestaurant';
   static const String addMenuCategory = '/files/addMenuCategory';
   static const String editDish = '/files/editDish';
+  static const String dropdownMenuCategory = '/files/DropDownMenuategory';
 }

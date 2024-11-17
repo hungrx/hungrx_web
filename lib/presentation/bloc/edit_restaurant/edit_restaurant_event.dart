@@ -1,4 +1,4 @@
-import 'package:hungrx_web/data/models/edit_restaurant_model.dart';
+import 'package:hungrx_web/data/models/restaurant_models/edit_restaurant_model.dart';
 
 abstract class EditRestaurantEvent {}
 

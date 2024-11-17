@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:hungrx_web/data/models/dish_edit_model.dart';
+import 'package:hungrx_web/data/models/menu_models/dish_edit_model.dart';
 
 abstract class DishEditEvent {}
 

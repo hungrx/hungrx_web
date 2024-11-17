@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_web/data/repositories/add_category_repository.dart';
+import 'package:hungrx_web/data/repositories/restaurant_repo/add_category_repository.dart';
 import 'package:hungrx_web/presentation/bloc/restuarant_category/add_catogory/add_category_event.dart';
 import 'package:hungrx_web/presentation/bloc/restuarant_category/add_catogory/add_category_state.dart';
 

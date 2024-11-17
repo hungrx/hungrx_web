@@ -1,31 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_web/data/datasource/api/add_category_remote_data_source.dart';
-import 'package:hungrx_web/data/datasource/api/category_remote_data_source.dart';
-import 'package:hungrx_web/data/datasource/api/category_subcategory_api.dart';
-import 'package:hungrx_web/data/datasource/api/get_menu_category_api.dart';
-import 'package:hungrx_web/data/datasource/api/menu_api.dart';
-import 'package:hungrx_web/data/datasource/api/menu_category_api_service.dart';
-import 'package:hungrx_web/data/repositories/add_category_repository.dart';
-import 'package:hungrx_web/data/repositories/category_repository_impl.dart';
-import 'package:hungrx_web/data/repositories/category_subcategory_repository.dart';
-import 'package:hungrx_web/data/repositories/dish_edit_repository.dart';
-import 'package:hungrx_web/data/repositories/get_menu_category_repository.dart';
-import 'package:hungrx_web/data/repositories/menu_repository.dart';
-import 'package:hungrx_web/data/repositories/menu_repository_impl.dart';
-import 'package:hungrx_web/data/repositories/restaurant_repository.dart';
-import 'package:hungrx_web/domain/usecase/create_menu_category_usecase.dart';
-import 'package:hungrx_web/domain/usecase/get_categories_usecase.dart';
-import 'package:hungrx_web/domain/usecase/get_menu_usecase.dart';
-import 'package:hungrx_web/domain/usecase/get_restaurants_usecase.dart';
+import 'package:hungrx_web/core/constant/api_constant.dart';
+import 'package:hungrx_web/data/datasource/api/menu_api/add_menu_subcategory_api.dart';
+import 'package:hungrx_web/data/datasource/api/menu_api/dropdown_menu_category_api.dart';
+import 'package:hungrx_web/data/datasource/api/menu_api/get_category_subcategory_api.dart';
+import 'package:hungrx_web/data/datasource/api/resturant_api/add_category_remote_data_source.dart';
+import 'package:hungrx_web/data/datasource/api/resturant_api/category_remote_data_source.dart';
+import 'package:hungrx_web/data/datasource/api/menu_api/menu_api.dart';
+import 'package:hungrx_web/data/datasource/api/menu_api/add_menu_category_api_service.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/add_menu_subcategory_repository.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/dropdown_menu_category_repository.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/get_category_subcategory_repository.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/get_dropdown_menu_categories.dart';
+import 'package:hungrx_web/data/repositories/restaurant_repo/add_category_repository.dart';
+import 'package:hungrx_web/data/repositories/restaurant_repo/category_repository_impl.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/dish_edit_repository.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/menu_repository.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/menu_repository_impl.dart';
+import 'package:hungrx_web/data/repositories/restaurant_repo/restaurant_repository.dart';
+import 'package:hungrx_web/domain/usecase/manu_usecase/create_menu_category_usecase.dart';
+import 'package:hungrx_web/domain/usecase/manu_usecase/create_menu_subcategory.dart';
+import 'package:hungrx_web/domain/usecase/manu_usecase/get_categories_and_subcategories.dart';
+import 'package:hungrx_web/domain/usecase/restaurant_usecase/get_categories_usecase.dart';
+import 'package:hungrx_web/domain/usecase/manu_usecase/get_menu_usecase.dart';
+import 'package:hungrx_web/domain/usecase/restaurant_usecase/get_restaurants_usecase.dart';
+import 'package:hungrx_web/presentation/bloc/add_menu_subcategory/add_menu_subcategory_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/add_restaurant/add_restaurant_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/dish_editing/dish_editing_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/dropdown_menu_category/dropdown_menu_category_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_bloc.dart';
-import 'package:hungrx_web/presentation/bloc/get_menu_category/get_menu_category_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/get_category_subcategory/get_category_subcategory_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/login_page/login_page_bloc.dart';
-import 'package:hungrx_web/presentation/bloc/menu_category/menu_category_bloc.dart';
-import 'package:hungrx_web/presentation/bloc/menu_catgory_subcategory/menu_category_subcategory_bloc.dart';
-import 'package:hungrx_web/presentation/bloc/menu_catgory_subcategory/menu_category_subcategory_event.dart';
+import 'package:hungrx_web/presentation/bloc/add_menu_main_category/menu_category_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/otp_verification/otp_verification_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_bloc.dart';
@@ -44,6 +50,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dropdownMenuCategoryApi = DropdownMenuCategoryApi(
+      baseUrl: ApiConstants.baseUrl,
+    );
+    final dropdownMenuCategoryRepository = DropdownMenuCategoryRepository(
+      api: dropdownMenuCategoryApi,
+    );
+    final getDropdownMenuCategories = GetDropdownMenuCategories(
+      repository: dropdownMenuCategoryRepository,
+    );
     final restaurantRepository = RestaurantRepository();
     final getRestaurantsUseCase =
         GetRestaurantsUseCase(repository: restaurantRepository);
@@ -52,22 +67,38 @@ class MyApp extends StatelessWidget {
     final menuRepository = MenuRepository(menuApi);
     final getMenuUseCase = GetMenuUseCase(menuRepository);
     final MenuApiService menuApiService = MenuApiService();
+    final api = AddMenuSubcategoryApi(baseUrl: ApiConstants.baseUrl);
+    final repository = AddMenuSubcategoryRepository(api: api);
+    final createMenuSubcategory = CreateMenuSubcategory(repository: repository);
     return MultiBlocProvider(
       providers: [
+        BlocProvider(
+          create: (context) => GetCategorySubcategoryBloc(
+            getCategoriesAndSubcategories: GetCategoriesAndSubcategories(
+              repository: GetCategorySubcategoryRepository(
+                api: GetCategorySubcategoryApi(
+                  baseUrl: ApiConstants.baseUrl,
+                ),
+              ),
+            ),
+          ),
+        ),
+        BlocProvider(
+          create: (context) => DropdownMenuCategoryBloc(
+            getDropdownMenuCategories: getDropdownMenuCategories,
+          ),
+        ),
+        BlocProvider(
+          create: (context) => AddMenuSubcategoryBloc(
+            createMenuSubcategory: createMenuSubcategory,
+          ),
+        ),
         BlocProvider<DishEditBloc>(
           create: (context) => DishEditBloc(
             repository: DishEditRepository(),
           ),
         ),
-        BlocProvider(
-          create: (context) => GetMenuCategoryBloc(
-            repository: GetMenuCategoryRepository(
-              api: GetMenuCategoryApi(
-                client: http.Client(),
-              ),
-            ),
-          ),
-        ),
+
         BlocProvider<MenuBloc>(
           create: (_) => MenuBloc(
             getMenuUseCase,
@@ -91,18 +122,11 @@ class MyApp extends StatelessWidget {
         BlocProvider<MenuCategoryBloc>(
           create: (context) => MenuCategoryBloc(
             createMenuCategoryUseCase: CreateMenuCategoryUseCase(
-              MenuRepositoryImpl(
-                apiService: menuApiService,
-              ),
+              MenuCategoryRepositoryImpl(
+                  apiService:
+                      menuApiService), // Correct way to pass the apiService
             ),
           ),
-        ),
-        BlocProvider(
-          create: (context) => CategorySubcategoryBloc(
-            repository: CategorySubcategoryRepository(
-              api: CategorySubcategoryApi(),
-            ),
-          )..add(FetchCategoriesAndSubcategories()),
         ),
 
         BlocProvider(create: (context) => AddRestaurantBloc()),

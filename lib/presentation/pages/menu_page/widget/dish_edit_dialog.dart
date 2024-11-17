@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_web/data/datasource/api/category_subcategory_api.dart';
-import 'package:hungrx_web/data/models/dish_edit_model.dart';
-import 'package:hungrx_web/data/repositories/category_subcategory_repository.dart';
-import 'package:hungrx_web/data/repositories/dish_edit_repository.dart';
+import 'package:hungrx_web/data/models/menu_models/dish_edit_model.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/dish_edit_repository.dart';
 import 'package:hungrx_web/presentation/bloc/dish_editing/dish_editing_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/dish_editing/dish_editing_event.dart';
 import 'package:hungrx_web/presentation/bloc/dish_editing/dish_editing_state.dart';
-import 'package:hungrx_web/presentation/bloc/menu_catgory_subcategory/menu_category_subcategory_bloc.dart';
-import 'package:hungrx_web/presentation/bloc/menu_catgory_subcategory/menu_category_subcategory_event.dart';
-import 'package:hungrx_web/presentation/bloc/menu_catgory_subcategory/menu_category_subcategory_state.dart';
-import 'package:hungrx_web/presentation/pages/menu_page/widget/category_in_editdish.dart';
 import 'package:image_picker_web/image_picker_web.dart';
 
 class DishEditDialog extends StatefulWidget {
@@ -54,7 +48,7 @@ class _DishEditDialogState extends State<DishEditDialog> {
   void initState() {
     super.initState();
     _initializeControllers();
-    _loadCategories();
+
   }
 
   void _initializeControllers() {
@@ -80,11 +74,7 @@ class _DishEditDialogState extends State<DishEditDialog> {
     _selectedSubcategory = widget.initialData?['subcategoryId'];
   }
 
-  void _loadCategories() {
-    context
-        .read<CategorySubcategoryBloc>()
-        .add(FetchCategoriesAndSubcategories());
-  }
+
 
   @override
   void dispose() {
@@ -129,11 +119,7 @@ class _DishEditDialogState extends State<DishEditDialog> {
             repository: DishEditRepository(),
           ),
         ),
-        BlocProvider<CategorySubcategoryBloc>(
-          create: (context) => CategorySubcategoryBloc(
-            repository: CategorySubcategoryRepository(api: CategorySubcategoryApi()),
-          )..add(FetchCategoriesAndSubcategories()),
-        ),
+
       ],
         child: BlocListener<DishEditBloc, DishEditState>(
         listener: (context, state) {
@@ -303,7 +289,7 @@ class _DishEditDialogState extends State<DishEditDialog> {
         const SizedBox(height: 24),
         _buildNutritionSection(),
         const SizedBox(height: 24),
-        _buildCategorySection(),
+      
         const SizedBox(height: 24),
         _buildServingSection(),
       ],
@@ -470,109 +456,109 @@ class _DishEditDialogState extends State<DishEditDialog> {
     );
   }
 
-  Widget _buildCategorySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'CATEGORY',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        BlocBuilder<CategorySubcategoryBloc, CategorySubcategoryState>(
-          builder: (context, state) {
-            if (state is CategorySubcategoryLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+  // Widget _buildCategorySection() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       const Text(
+  //         'CATEGORY',
+  //         style: TextStyle(
+  //           fontSize: 18,
+  //           fontWeight: FontWeight.bold,
+  //         ),
+  //       ),
+  //       const SizedBox(height: 16),
+  //       BlocBuilder<CategorySubcategoryBloc, CategorySubcategoryState>(
+  //         builder: (context, state) {
+  //           if (state is CategorySubcategoryLoading) {
+  //             return const Center(child: CircularProgressIndicator());
+  //           }
 
-            if (state is CategorySubcategoryLoaded) {
-              if (state.categories.isEmpty) {
-                return const Text('No categories available');
-              }
+  //           if (state is CategorySubcategoryLoaded) {
+  //             if (state.categories.isEmpty) {
+  //               return const Text('No categories available');
+  //             }
 
-              // Ensure selected category defaults to the first category if none is selected
-              final selectedCategoryObj = _selectedCategory != null
-                  ? state.categories.firstWhere(
-                      (cat) => cat.id == _selectedCategory,
-                      orElse: () => state.categories.first,
-                    )
-                  : state.categories.first;
+  //             // Ensure selected category defaults to the first category if none is selected
+  //             final selectedCategoryObj = _selectedCategory != null
+  //                 ? state.categories.firstWhere(
+  //                     (cat) => cat.id == _selectedCategory,
+  //                     orElse: () => state.categories.first,
+  //                   )
+  //                 : state.categories.first;
 
-              return Column(
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: _selectedCategory,
-                    decoration: InputDecoration(
-                      labelText: 'MAIN CATEGORY',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    items: state.categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category.id,
-                        child: Text(category.name),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategory = value;
-                        _selectedSubcategory = null; // Reset subcategory
-                      });
-                    },
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Please select a category'
-                        : null,
-                  ),
-                  if (_selectedCategory != null) ...[
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: _selectedSubcategory,
-                      decoration: InputDecoration(
-                        labelText: 'SUB CATEGORY',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      items:
-                          selectedCategoryObj.subcategories.map((subcategory) {
-                        return DropdownMenuItem(
-                          value: subcategory.id,
-                          child: Text(subcategory.name),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedSubcategory = value;
-                        });
-                      },
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Please select a subcategory'
-                          : null,
-                    ),
-                  ],
-                ],
-              );
-            }
+  //             return Column(
+  //               children: [
+  //                 DropdownButtonFormField<String>(
+  //                   value: _selectedCategory,
+  //                   decoration: InputDecoration(
+  //                     labelText: 'MAIN CATEGORY',
+  //                     border: OutlineInputBorder(
+  //                       borderRadius: BorderRadius.circular(8),
+  //                     ),
+  //                   ),
+  //                   items: state.categories.map((category) {
+  //                     return DropdownMenuItem(
+  //                       value: category.id,
+  //                       child: Text(category.name),
+  //                     );
+  //                   }).toList(),
+  //                   onChanged: (value) {
+  //                     setState(() {
+  //                       _selectedCategory = value;
+  //                       _selectedSubcategory = null; // Reset subcategory
+  //                     });
+  //                   },
+  //                   validator: (value) => value == null || value.isEmpty
+  //                       ? 'Please select a category'
+  //                       : null,
+  //                 ),
+  //                 if (_selectedCategory != null) ...[
+  //                   const SizedBox(height: 16),
+  //                   DropdownButtonFormField<String>(
+  //                     value: _selectedSubcategory,
+  //                     decoration: InputDecoration(
+  //                       labelText: 'SUB CATEGORY',
+  //                       border: OutlineInputBorder(
+  //                         borderRadius: BorderRadius.circular(8),
+  //                       ),
+  //                     ),
+  //                     items:
+  //                         selectedCategoryObj.subcategories.map((subcategory) {
+  //                       return DropdownMenuItem(
+  //                         value: subcategory.id,
+  //                         child: Text(subcategory.name),
+  //                       );
+  //                     }).toList(),
+  //                     onChanged: (value) {
+  //                       setState(() {
+  //                         _selectedSubcategory = value;
+  //                       });
+  //                     },
+  //                     validator: (value) => value == null || value.isEmpty
+  //                         ? 'Please select a subcategory'
+  //                         : null,
+  //                   ),
+  //                 ],
+  //               ],
+  //             );
+  //           }
 
-            if (state is CategorySubcategoryError) {
-              return ErrorDisplay(
-                message: state.message,
-                onRetry: () => context.read<CategorySubcategoryBloc>().add(
-                      FetchCategoriesAndSubcategories(),
-                    ),
-              );
-            }
+  //           if (state is CategorySubcategoryError) {
+  //             return ErrorDisplay(
+  //               message: state.message,
+  //               onRetry: () => context.read<CategorySubcategoryBloc>().add(
+  //                     FetchCategoriesAndSubcategories(),
+  //                   ),
+  //             );
+  //           }
 
-            return const Text('Failed to load categories');
-          },
-        ),
-      ],
-    );
-  }
+  //           return const Text('Failed to load categories');
+  //         },
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildServingSection() {
     return Column(

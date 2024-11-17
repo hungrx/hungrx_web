@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_web/core/error/exceptions.dart';
-import 'package:hungrx_web/data/repositories/edit_restaurant_repository.dart';
+import 'package:hungrx_web/data/repositories/restaurant_repo/edit_restaurant_repository.dart';
 import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_event.dart';
 import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_state.dart';
 
