@@ -7,7 +7,7 @@ import 'package:hungrx_web/presentation/bloc/menu_search/menu_search_bloc.dart';
 import 'package:hungrx_web/presentation/pages/common_food_page/common_food_screen.dart';
 import 'package:hungrx_web/presentation/pages/dashboard_page/dashboard_screen.dart';
 import 'package:hungrx_web/presentation/pages/grocery_page/grocery_screen.dart';
-import 'package:hungrx_web/presentation/pages/menu_page/restaurant_menu_screen.dart';
+import 'package:hungrx_web/presentation/pages/menu_page/menu_screen.dart';
 import 'package:hungrx_web/presentation/pages/menu_page/widget/menu_search_screen.dart';
 import 'package:hungrx_web/presentation/pages/otp_verifiacation/otp_verification_screen.dart';
 import 'package:hungrx_web/presentation/pages/restaurant_page/restaurant_screen.dart';

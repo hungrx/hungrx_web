@@ -2,9 +2,9 @@ class CategoryModel {
   final String id;
   final String? name;
 
-  CategoryModel({required this.id,  this.name});
+  CategoryModel({required this.id, this.name});
 
-factory CategoryModel.fromJson(dynamic json) {
+  factory CategoryModel.fromJson(dynamic json) {
     if (json is String) {
       return CategoryModel(id: json, name: '');
     }
@@ -23,5 +23,22 @@ factory CategoryModel.fromJson(dynamic json) {
       'id': id,
       'name': name,
     };
+  }
+}
+
+class MenuInfo {
+  final String id;
+  final String name;
+
+  MenuInfo({
+    required this.id,
+    required this.name,
+  });
+
+  factory MenuInfo.fromJson(Map<String, dynamic> json) {
+    return MenuInfo(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+    );
   }
 }

@@ -4,16 +4,22 @@ import 'package:go_router/go_router.dart';
 import 'package:hungrx_web/core/widgets/custom_navbar.dart';
 import 'package:hungrx_web/data/models/menu_models/get_category_subcategory_model.dart';
 import 'package:hungrx_web/data/models/menu_models/menu_model.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/food_search_repo.dart';
 import 'package:hungrx_web/presentation/bloc/get_category_subcategory/get_category_subcategory_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/get_category_subcategory/get_category_subcategory_event.dart';
 import 'package:hungrx_web/presentation/bloc/get_category_subcategory/get_category_subcategory_state.dart';
+import 'package:hungrx_web/presentation/bloc/get_dishes_by%20category/get_dishes_by_category_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/get_dishes_by%20category/get_dishes_by_category_event.dart';
+import 'package:hungrx_web/presentation/bloc/get_dishes_by%20category/get_dishes_by_category_state.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_event.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_state.dart';
+import 'package:hungrx_web/presentation/bloc/search_food_dialog/search_food_dialog_bloc.dart';
 import 'package:hungrx_web/presentation/layout/app_layout.dart';
 import 'package:hungrx_web/presentation/pages/menu_page/widget/category_management_widget.dart';
 import 'package:hungrx_web/presentation/pages/menu_page/widget/dish_card_widget.dart';
 import 'package:hungrx_web/presentation/pages/menu_page/widget/dish_edit_dialog.dart';
+import 'package:hungrx_web/presentation/pages/menu_page/widget/food_search_dialog.dart';
 
 
 class RestaurantMenuScreen extends StatefulWidget {
@@ -54,13 +60,33 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         );
     context.read<MenuBloc>().add(FetchMenu(widget.restaurantId));
   }
+  
+  void _onCategorySelected(String categoryId) {
+  context.read<GetDishesByCategoryBloc>().add(
+    FetchDishesByCategoryEvent(
+      restaurantId: widget.restaurantId,
+      categoryId: categoryId,
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
     return AppLayout(
+      
       currentItem: NavbarItem.restaurant,
       child: MultiBlocListener(
         listeners: [
+
+            BlocListener<GetDishesByCategoryBloc, GetDishesByCategoryState>(
+            listener: (context, state) {
+              if (state is GetDishesByCategoryError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.message)),
+                );
+              }
+            },
+          ),
      
           BlocListener<MenuBloc, MenuState>(
             listener: (context, menuState) {
@@ -135,28 +161,66 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     );
   }
 
-   Widget _buildLoadedContent(dynamic menuData) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = MediaQuery.of(context).size.width >= 1200;
-        final isTablet = MediaQuery.of(context).size.width < 1200;
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-         if (isDrawerOpen) _buildAlwaysVisibleDrawer(isTablet),
-            Expanded(
-              child: _buildMainContent(
-                isDesktop,
-                isTablet,
-                menuData,
+ Widget _buildLoadedContent(dynamic menuData) {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final isDesktop = MediaQuery.of(context).size.width >= 1200;
+      final isTablet = MediaQuery.of(context).size.width < 1200;
+      
+      return Stack(  // Wrap Row with Stack to overlay FAB
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isDrawerOpen) _buildAlwaysVisibleDrawer(isTablet),
+              Expanded(
+                child: _buildMainContent(
+                  isDesktop,
+                  isTablet,
+                  menuData,
+                ),
+              ),
+            ],
+          ),
+          Positioned(  // Add FAB using Positioned
+            right: 20,
+            bottom: 20,
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => BlocProvider(
+                    create: (context) => FoodSearchBloc(
+                      foodRepository: FoodRepository(),
+                    ),
+                    child: const FoodSearchDialog(),
+                  ),
+                );
+              },
+              backgroundColor: Colors.green,
+              label: const Row(
+                children: [
+                  Icon(
+                    Icons.add,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'ADD DISH',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        );
-      },
-    );
-  }
+          ),
+        ],
+      );
+    },
+  );
+}
   Widget _buildAlwaysVisibleDrawer(bool isTablet) {
   return Container(
     width: isTablet ? 200 : 250,
@@ -489,9 +553,9 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   onPressed: () {
                     // Handle adding new dish
                   },
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.create),
                   label: Text(
-                    isTablet ? 'ADD' : 'ADD DISH',
+                    isTablet ? 'CREATE' : 'CREATE DISH',
                     style: TextStyle(fontSize: isTablet ? 13 : 14),
                   ),
                   style: ElevatedButton.styleFrom(

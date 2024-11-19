@@ -10,6 +10,7 @@ import 'package:hungrx_web/data/datasource/api/menu_api/menu_api.dart';
 import 'package:hungrx_web/data/datasource/api/menu_api/add_menu_category_api_service.dart';
 import 'package:hungrx_web/data/repositories/menu_repo/add_menu_subcategory_repository.dart';
 import 'package:hungrx_web/data/repositories/menu_repo/dropdown_menu_category_repository.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/food_search_repo.dart';
 import 'package:hungrx_web/data/repositories/menu_repo/get_category_subcategory_repository.dart';
 import 'package:hungrx_web/data/repositories/menu_repo/get_dropdown_menu_categories.dart';
 import 'package:hungrx_web/data/repositories/restaurant_repo/add_category_repository.dart';
@@ -30,6 +31,7 @@ import 'package:hungrx_web/presentation/bloc/dish_editing/dish_editing_bloc.dart
 import 'package:hungrx_web/presentation/bloc/dropdown_menu_category/dropdown_menu_category_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/edit_restaurant/edit_restaurant_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/get_category_subcategory/get_category_subcategory_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/get_dishes_by%20category/get_dishes_by_category_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/login_page/login_page_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/add_menu_main_category/menu_category_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/menu_display/menu_display_bloc.dart';
@@ -37,6 +39,7 @@ import 'package:hungrx_web/presentation/bloc/otp_verification/otp_verification_b
 import 'package:hungrx_web/presentation/bloc/restaurant_display/restaurant_disply_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/restuarant_category/add_catogory/add_category_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/restuarant_category/restuarant_category_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/search_food_dialog/search_food_dialog_bloc.dart';
 import 'routes/app_router.dart';
 import 'package:http/http.dart' as http;
 
@@ -84,6 +87,9 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider(
+          create: (context) => GetDishesByCategoryBloc(),
+        ),
+        BlocProvider(
           create: (context) => DropdownMenuCategoryBloc(
             getDropdownMenuCategories: getDropdownMenuCategories,
           ),
@@ -102,6 +108,11 @@ class MyApp extends StatelessWidget {
         BlocProvider<MenuBloc>(
           create: (_) => MenuBloc(
             getMenuUseCase,
+          ),
+        ),
+        BlocProvider(
+          create: (context) => FoodSearchBloc(
+            foodRepository: FoodRepository(),
           ),
         ),
 

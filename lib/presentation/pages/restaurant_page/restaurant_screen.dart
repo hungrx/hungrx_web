@@ -209,7 +209,7 @@ class RestaurantScreen extends HookWidget {
           CustomHeader(
             title: 'ALL RESTAURANT',
             searchHint: 'Search restaurant...',
-            buttonLabel: 'ADD RESTAURANT',
+            buttonLabel: 'CREATE RESTAURANT',
             isTablet: isTablet,
             onAddPressed: () {
               if (state is CategoryLoaded && state.categories.isNotEmpty) {
