@@ -2,16 +2,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_web/data/datasource/api/menu_api/add_food_category_api.dart';
+import 'package:hungrx_web/data/datasource/api/menu_api/dish_api_service.dart';
 import 'package:hungrx_web/data/datasource/api/menu_api/quick_search_api.dart';
 import 'package:hungrx_web/data/repositories/menu_repo/add_food_category_repository.dart';
+import 'package:hungrx_web/data/repositories/menu_repo/dish_repository.dart';
 import 'package:hungrx_web/data/repositories/menu_repo/quick_search_repository.dart';
 import 'package:hungrx_web/data/models/menu_models/quick_search_response.dart';
+import 'package:hungrx_web/domain/usecase/manu_usecase/create_new_dish_usecase.dart';
 import 'package:hungrx_web/presentation/bloc/add_food_to_category/add_food_to_category_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/create_new_dish/create_new_dish_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/get_dishes_by%20category/get_dishes_by_category_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/get_dishes_by%20category/get_dishes_by_category_event.dart';
 import 'package:hungrx_web/presentation/bloc/menu_quick_search/menu_quick_search_dialog_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/menu_quick_search/menu_quick_search_dialog_event.dart';
 import 'package:hungrx_web/presentation/bloc/menu_quick_search/menu_quick_search_dialog_state.dart';
+import 'package:hungrx_web/presentation/pages/menu_page/widget/create_dish_dialog.dart';
 import 'package:hungrx_web/presentation/pages/menu_page/widget/dish_add_button_in_dialog.dart';
 
 class FoodSearchDialog extends StatelessWidget {
@@ -143,11 +148,12 @@ class _FoodSearchContentState extends State<FoodSearchContent> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      decoration: const BoxDecoration(
+        color: Colors.green,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           const Expanded(
             child: Text(
@@ -158,6 +164,45 @@ class _FoodSearchContentState extends State<FoodSearchContent> {
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => BlocProvider(
+                  create: (context) => CreateDishBloc(
+                    CreateNewDishUseCase(
+                      DishRepository(
+                        DishApiService(),
+                      ),
+                    ),
+                  ),
+                  child: CreateDishDialog(
+                    restaurantId:
+                        widget.restaurantId, // Pass your restaurant ID
+                    menuId: widget.menuId, // Pass your menu ID
+                  ),
+                ),
+              );
+
+              // Handle adding new dish
+            },
+            icon: const Icon(Icons.create),
+            label: const Text(
+              'CREATE DISH',
+              style: TextStyle(fontSize: 14),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 7, 61, 10),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 16,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
             ),
           ),
           IconButton(
@@ -373,14 +418,13 @@ class FoodSearchTile extends StatefulWidget {
 }
 
 class _FoodSearchTileState extends State<FoodSearchTile> {
-  
   void _loadCategoryDishes(String categoryId) {
     context.read<GetDishesByCategoryBloc>().add(
-      FetchDishesByCategoryEvent(
-        restaurantId: widget.restaurantId,
-        categoryId: categoryId,
-      ),
-    );
+          FetchDishesByCategoryEvent(
+            restaurantId: widget.restaurantId,
+            categoryId: categoryId,
+          ),
+        );
   }
 
   @override
@@ -441,7 +485,8 @@ class _FoodSearchTileState extends State<FoodSearchTile> {
             children: [
               _buildCategoryChip(widget.dish.category!),
               if (widget.dish.subcategory != null)
-                _buildCategoryChip(widget.dish.subcategory!, isSubCategory: true),
+                _buildCategoryChip(widget.dish.subcategory!,
+                    isSubCategory: true),
             ],
           ),
       ],
@@ -471,15 +516,14 @@ class _FoodSearchTileState extends State<FoodSearchTile> {
   }
 
   Widget _buildAddButton(BuildContext context, int index) {
-  return DishAddButton(
-    index: index,
-    restaurantId: widget.restaurantId,
-    menuId: widget.menuId,
-    categoryId: widget.categoryId,
-    subcategoryId: widget.subcategoryId,
-    dish: widget.dish,
-    onDishAdded: () => _loadCategoryDishes(widget.categoryId),
-  );
-}
-
+    return DishAddButton(
+      index: index,
+      restaurantId: widget.restaurantId,
+      menuId: widget.menuId,
+      categoryId: widget.categoryId,
+      subcategoryId: widget.subcategoryId,
+      dish: widget.dish,
+      onDishAdded: () => _loadCategoryDishes(widget.categoryId),
+    );
+  }
 }
