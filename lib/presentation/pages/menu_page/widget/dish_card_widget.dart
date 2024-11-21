@@ -72,7 +72,7 @@ class DishCard extends HookWidget {
                         blendMode: BlendMode.darken,
                         child: 
                         RestaurantImageWidget(
-                          height: MediaQuery.of(context).size.width * .2,
+                          height: MediaQuery.of(context).size.width * .3,
                           imageUrl: image,
                           width: MediaQuery.of(context).size.width * .35,
                           fit: BoxFit.cover,

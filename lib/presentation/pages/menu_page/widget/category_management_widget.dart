@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/add_menu_main_category/menu_category_bloc.dart';
 import 'package:hungrx_web/presentation/bloc/add_menu_main_category/menu_category_event.dart';
 import 'package:hungrx_web/presentation/bloc/add_menu_main_category/menu_category_state.dart';
+import 'package:hungrx_web/presentation/bloc/get_category_subcategory/get_category_subcategory_bloc.dart';
+import 'package:hungrx_web/presentation/bloc/get_category_subcategory/get_category_subcategory_event.dart';
 import 'package:hungrx_web/presentation/pages/menu_page/widget/create_subcategory_dialog.dart';
 
 class CategoryManagementWidget extends StatefulWidget {
@@ -20,7 +22,13 @@ class CategoryManagementWidget extends StatefulWidget {
       _CategoryManagementWidgetState();
 }
 
+
 class _CategoryManagementWidgetState extends State<CategoryManagementWidget> {
+  @override
+  void dispose() {
+   _categoryController.dispose();
+    super.dispose();
+  }
   final _categoryController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
@@ -33,8 +41,15 @@ class _CategoryManagementWidgetState extends State<CategoryManagementWidget> {
       listener: (context, state) {
         if (state is MenuCategoryCreatedSuccess) {
           if (_dialogContext != null) {
+            context.read<GetCategorySubcategoryBloc>().add(
+                  FetchCategoriesAndSubcategoriesEvent(
+                    restaurantId: widget.restaurantId,
+                  ),
+                );
+                _categoryController.text ='';
             Navigator.pop(_dialogContext!); // Close only the dialog
           }
+        
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
@@ -188,6 +203,8 @@ class _CategoryManagementWidgetState extends State<CategoryManagementWidget> {
                                   CreateMenuCategoryEvent(widget.restaurantId,
                                       _categoryController.text),
                                 );
+                                
+
                           }
                         },
                   style: ElevatedButton.styleFrom(
@@ -234,7 +251,7 @@ class _CategoryManagementWidgetState extends State<CategoryManagementWidget> {
   void showAddSubCategoryDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) =>  DropdownMenuCategoryDialog(
+      builder: (context) => DropdownMenuCategoryDialog(
         restaurantId: widget.restaurantId,
       ),
     );

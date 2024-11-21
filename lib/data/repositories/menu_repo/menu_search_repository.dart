@@ -16,7 +16,7 @@ class MenuSearchRepository {
         query: query,
         restaurantId: restaurantId,
       );
-      print(response);
+      // print(response);
       return MenuSearchResponse.fromJson(response);
     } on MenuException {
       rethrow;

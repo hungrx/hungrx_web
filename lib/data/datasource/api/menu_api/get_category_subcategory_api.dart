@@ -15,8 +15,8 @@ class GetCategorySubcategoryApi {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'restaurantId': restaurantId}),
       );
-print(response.body);
-print(response.statusCode);
+// print(response.body);
+// print(response.statusCode);
       if (response.statusCode == 200) {
         return GetCategorySubcategoryResponse.fromJson(json.decode(response.body));
       } else {
